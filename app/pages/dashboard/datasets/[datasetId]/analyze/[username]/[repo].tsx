@@ -18,6 +18,7 @@ import MetricsHint from "../../../../../../components/MetricsHint"
 import AnalysisSummarySection from "../../../../../../components/AnalysisSummarySection"
 import ChangeRepoModal from "../../../../../../components/ChangeRepoModal"
 import ChangeNModal from "../../../../../../components/ChangeNModal"
+import ChatBot from "../../../../../../components/ChatBot"
 
 enum MetricSituation {
   Ok = 'OK',
@@ -287,6 +288,21 @@ const Repo = () => {
       <Popup open={openN} onClose={closeModalN} >
         <ChangeNModal closeModal={closeModalN} refreshAnalysis={refreshAnalysis} currNValue={+router.query.near} datasetCount={referenceReposInfo.length} datasetId={router.query.datasetId} userName={router.query.username} repoName={router.query.repo} />
       </Popup>
+
+      {/* RAG Chatbot — only shown after loading is complete */}
+      {!isLoading && (
+        <ChatBot
+          repoContext={{
+            username: router.query.username as string,
+            repo: router.query.repo as string,
+            metrics: Object.fromEntries(
+              metricsData.flatMap((cat: any) =>
+                cat.metrics.map((m: any) => [m.name, m.values.selected.value])
+              )
+            ),
+          }}
+        />
+      )}
     </>
   )
 }
