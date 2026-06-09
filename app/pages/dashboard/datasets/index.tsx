@@ -144,7 +144,7 @@ const Datasets = () => {
         {!isLoading
           ? <div className={styles['repo-list']}>
             {displayingRepos.map((repo, index) => {
-              return (<RepoListItem key={repo['name']} repo={repo} datasetId={selectedDataset} getNValue={getNValue} />)
+              return (<RepoListItem key={repo['id']} repo={repo} datasetId={selectedDataset} getNValue={getNValue} />)
             })}
           </div>
           : (
