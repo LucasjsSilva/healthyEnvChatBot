@@ -43,7 +43,7 @@ export default function Auth() {
           <span className={styles.subtitle}>
             Log in or sign up with one of the following options:
           </span>
-          <Link href={`https://github.com/login/oauth/authorize?client_id=${Constants.ghCliendId}&redirect_uri=http://localhost:3000/auth/github?next=${router.query.next}`}>
+          <Link href={`https://github.com/login/oauth/authorize?client_id=${Constants.ghCliendId}&redirect_uri=${encodeURIComponent(`http://localhost:3000/auth/github?next=${router.query.next ?? '/dashboard/datasets'}`)}`}>
             <a>
               <div className={styles.option}>
                 <FontAwesomeIcon icon={faGithub} />
