@@ -47,8 +47,11 @@ class AnalysisRequestModel(db.Model):
 
 
   @classmethod
-  def get_requests_by_id_json(cls, email):
-    requests = cls.query.filter_by(email=email).all()
+  def get_requests_by_id_json(cls, identifier):
+    from sqlalchemy import or_
+    requests = cls.query.filter(
+      or_(AnalysisRequestModel.email == identifier, AnalysisRequestModel.name == identifier)
+    ).all()
 
     json = {
       'total_count': len(requests),
