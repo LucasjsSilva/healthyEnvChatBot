@@ -14,6 +14,7 @@ const nextConfig = {
       '/requests',
       '/auth/github_token',
       '/chat',
+      '/insights',
     ]
     return apiPaths.flatMap((p) => [
       { source: p, destination: `${API_URL}${p}` },
