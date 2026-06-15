@@ -1,0 +1,48 @@
+.card {
+  background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%);
+  border-left: 3px solid #6366f1;
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Skeleton shimmer for loading state */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e0e7ff 25%, #c7d2fe 50%, #e0e7ff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
