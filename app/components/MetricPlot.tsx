@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic'
 import styles from '../styles/MetricPlot.module.css'
 import PlotLoadingIndicator from './PlotLoadingIndicator'
+import { getMedian } from '../functions/stats'
 
 const Plot = dynamic(() => import('react-plotly.js'), {
   ssr: false,
@@ -35,8 +36,32 @@ const MetricPlot = (props: MetricPlotProps) => {
     }
   }
 
+  const validValues = props.yAll.filter((v) => v != null && !isNaN(v))
+  const median = validValues.length > 0 ? getMedian(validValues) : null
+  const selected = props.ySelected
+
+  const formatVal = (v: number) =>
+    v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Number(v.toFixed(2)))
+
+  let diffLabel: string | null = null
+  let diffPositive: boolean | null = null
+  if (median != null && median !== 0 && selected != null) {
+    const pct = ((selected - median) / median) * 100
+    const absPct = Math.abs(pct).toFixed(0)
+    if (pct > 0) {
+      diffLabel = `+${absPct}% acima da mediana`
+      diffPositive = true
+    } else if (pct < 0) {
+      diffLabel = `${absPct}% abaixo da mediana`
+      diffPositive = false
+    } else {
+      diffLabel = 'igual à mediana'
+      diffPositive = null
+    }
+  }
+
   return (
-    <div className={styles.box} style={{ width: `${(props.width)}px`, height: `${510}px`, backgroundColor: getColor(props.situation) }} >
+    <div className={styles.box} style={{ width: `${props.width}px`, height: `${560}px`, backgroundColor: getColor(props.situation) }}>
       <Plot
         data={[
           {
@@ -55,31 +80,43 @@ const MetricPlot = (props: MetricPlotProps) => {
             x: ['Métrica'],
             text: [props.name],
             name: 'Repositório',
-            marker: {
-              size: 8
-            },
+            marker: { size: 8 },
             pointpos: -1.0,
           }
         ]}
         layout={{
-          width: (props.width - 10),
+          width: props.width - 10,
           height: 500,
           title: props.title,
-          font: {
-            family: 'Lato, sans-serif',
-            color: '#111111'
-          },
+          font: { family: 'Lato, sans-serif', color: '#111111' },
           plot_bgcolor: getColor(props.situation),
           paper_bgcolor: getColor(props.situation),
-          yaxis: {
-            type: "log",
-            autorange: true,
-            showgrid: false,
-            zeroline: true,
-          }
+          yaxis: { type: 'log', autorange: true, showgrid: false, zeroline: true },
         }}
       />
-    </div >
+      {median != null && (
+        <div className={styles.medianRow}>
+          <span className={styles.medianLabel}>
+            Mediana dos similares: <strong>{formatVal(median)}</strong>
+          </span>
+          {diffLabel && (
+            <span
+              className={styles.diffBadge}
+              style={{
+                background:
+                  diffPositive === true ? '#bbf7d0' :
+                  diffPositive === false ? '#fecaca' : '#e5e7eb',
+                color:
+                  diffPositive === true ? '#166534' :
+                  diffPositive === false ? '#991b1b' : '#374151',
+              }}
+            >
+              {diffLabel}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
