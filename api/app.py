@@ -322,6 +322,67 @@ def insights():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Backfill: index all existing repos in FAISS so the RAG learns from them
+# Runs once in a background thread right after the app starts.
+# ──────────────────────────────────────────────────────────────────────────────
+
+import threading as _threading
+
+def _backfill_rag_index():
+    """Background task: indexes any repo already in the DB that isn't yet in FAISS."""
+    with app.app_context():
+        try:
+            from model.repository import RepositoryModel
+            from model.metric_repo import MetricRepoModel
+            from model.metric import MetricModel
+            from chatbot.rag_chain import index_repos_from_db
+
+            repos = RepositoryModel.query.all()
+            if not repos:
+                return
+
+            # Build metric id → name lookup
+            metrics = MetricModel.query.all()
+            metric_id_to_name = {m.id: m.name for m in metrics}
+
+            repo_ids = [r.id for r in repos]
+            all_metric_rows = MetricRepoModel.get_repos_metrics(repo_ids)
+
+            # Group metric rows by repo id: { repo_id: { metric_name: value } }
+            from collections import defaultdict
+            metrics_by_repo = defaultdict(dict)
+            for row in all_metric_rows:
+                metric_name = metric_id_to_name.get(row.id_metric, row.id_metric)
+                metrics_by_repo[row.id_repo][metric_name] = row.value
+
+            repos_data = []
+            for repo in repos:
+                m = metrics_by_repo.get(repo.id, {})
+                metrics_lines = "".join(
+                    f"- {name}: {value:.2f}\n" for name, value in m.items()
+                    if value is not None
+                )
+                text = (
+                    f"Repositório: {repo.name}\n"
+                    f"Linguagem principal: {repo.language}\n"
+                    f"Linhas de código (LOC): {repo.loc}\n"
+                    f"Estrelas: {repo.stars}\n"
+                    f"Forks: {repo.forks}\n"
+                    f"Issues abertas: {repo.open_issues}\n"
+                    f"Contribuidores únicos: {repo.contributors}\n"
+                    f"Total de commits: {repo.commits}\n"
+                    f"\nMétricas:\n{metrics_lines}"
+                )
+                repos_data.append({"id": repo.id, "text": text})
+
+            index_repos_from_db(repos_data)
+        except Exception as e:
+            print(f'[app] Warning: RAG backfill failed: {e}')
+
+
+_threading.Thread(target=_backfill_rag_index, daemon=True).start()
+
+# ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
   app.run(debug=True)
