@@ -21,19 +21,46 @@ const Requests = () => {
   const [userData, setUserData] = useState({})
   const [repositories, setRepositories] = useState([])
 
+  const [loadError, setLoadError] = useState('')
+
   async function loadRepositories() {
-    if (typeof window !== "undefined") {
-      try {
-        const data = localStorage.getItem('userData')
-        setUserData(JSON.parse(data))
+    if (typeof window === "undefined") return
+    try {
+      const raw = localStorage.getItem('userData')
+      if (!raw) {
+        setLoadError('Usuário não autenticado. Faça login novamente.')
+        return
+      }
+      const parsed = JSON.parse(raw)
+      if (!parsed.email) parsed.email = parsed.login
+      setUserData(parsed)
 
-        const response = await axios.get(`https://api.github.com/users/${JSON.parse(data).login}/repos`)
+      if (!parsed.token) {
+        setLoadError('Token inválido. Faça logout e login novamente.')
+        return
+      }
 
-        if (response.status == 200) {
-          setRepositories(response.data)
-          setIsLoadingRepositories(false)
-        }
-      } catch (e) { }
+      const response = await axios.get(`https://api.github.com/user/repos`, {
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `token ${parsed.token}`,
+        },
+        params: { per_page: 100, sort: 'updated' },
+      })
+
+      if (response.status === 200) {
+        setRepositories(response.data)
+      }
+    } catch (e: any) {
+      console.error('Failed to load repositories:', e)
+      const status = e?.response?.status
+      if (status === 401) {
+        setLoadError('Sessão expirada. Faça logout e login novamente.')
+      } else {
+        setLoadError(`Erro ao carregar repositórios (${status ?? e?.message}).`)
+      }
+    } finally {
+      setIsLoadingRepositories(false)
     }
   }
 
@@ -76,6 +103,7 @@ const Requests = () => {
       name: username,
       email: email,
       repo_url: repo,
+      gh_token: userData['token'],
     }
     )
     if (response.status >= 200) {
@@ -100,8 +128,9 @@ const Requests = () => {
     repositories.forEach((repository, index) => {
       repoItemList.push(
         <div className="bg-white h-[45px] rounded-md mb-2 px-4 py-2 flex flex-row items-center justify-between cursor-pointer hover:shadow-md" key={`repo_${index}`} onClick={() => {
-          submitRequest(userData['login'], userData['email'], repository['svn_url']).then(() => {
-            router.push(`/dashboard/requests/${userData['email']}`)
+          const email = userData['email'] || userData['login']
+          submitRequest(userData['login'], email, repository['svn_url']).then(() => {
+            router.push(`/dashboard/requests/${email}`)
           })
         }} >
           <span className="text-lg">{repository['name']}</span>
@@ -127,6 +156,10 @@ const Requests = () => {
         {isLoadingRepositories ? (
           <div>
             {renederSkeletonLoader()}
+          </div>
+        ) : loadError ? (
+          <div className="bg-white rounded-md px-4 py-3 text-red-600">
+            {loadError}
           </div>
         ) : (
           <div>

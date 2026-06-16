@@ -1,4 +1,5 @@
 import MetricPlot from "./MetricPlot"
+import InsightCard from "./InsightCard"
 import useWindowDimensions from "../utils/useWindowDimensions"
 import styles from '../styles/PlotGrid.module.css'
 import { FC } from "react"
@@ -8,7 +9,7 @@ interface PlotGridProps {
   workingGroup
 }
 
-const PlotGrid: FC<{ data: PlotGridProps }> = ({ data }) => {
+const PlotGrid: FC<{ data: PlotGridProps; insight?: string; insightLoading?: boolean }> = ({ data, insight, insightLoading }) => {
   const { width } = useWindowDimensions()
 
   let safeWidth = width > 1280 ? 1280 - 72 : width - 72;
@@ -50,6 +51,7 @@ const PlotGrid: FC<{ data: PlotGridProps }> = ({ data }) => {
       <div className={styles.grid} style={style}>
         {generatePlots()}
       </div>
+      <InsightCard text={insight} loading={insightLoading ?? false} />
     </div>
   )
 }

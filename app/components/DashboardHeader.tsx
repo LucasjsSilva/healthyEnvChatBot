@@ -58,7 +58,7 @@ export default function DashboardHeader({ selectedIndex }: SelectedIndex) {
   return (
     <div className={styles.header}>
       <div id="mySidenav" className={styles.sidenav} style={showDrawer ? { minWidth: '300px' } : { minWidth: '0px' }}>
-        <a href="javascript:void(0)" className={styles.closebtn} onClick={() => setShowDrawer(!showDrawer)}>&times;</a>
+        <button className={styles.closebtn} onClick={() => setShowDrawer(!showDrawer)}>&times;</button>
         <Link href='/dashboard/datasets'>
           <a>
             {selectedIndex == 1
