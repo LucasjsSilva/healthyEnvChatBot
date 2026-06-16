@@ -8,6 +8,7 @@ from model.repository import RepositoryModel
 from model.analysis_request import AnalysisRequestModel
 from model.metric_category import MetricCategory
 from clustering.cluster import get_cluster
+from processor import process_repository_async
 from dotenv import load_dotenv
 from db import db
 from nanoid import generate
@@ -114,6 +115,10 @@ def analysis_request(dataset_id: str):
     except KeyError:
       return ErrorResponses.missing_info
 
+    # Trigger background processing immediately after saving the request
+    gh_token = data.get('gh_token')
+    process_repository_async(app, analysis_request.id, dataset_id, data['repo_url'], gh_token)
+
     return Response(
       json.dumps(analysis_request.json(), indent=2),
       status=200, mimetype='application/json')
@@ -159,6 +164,7 @@ def auth_github():
 # ─── Chatbot RAG endpoints ────────────────────────────────────────────────────
 
 from chatbot.session_manager import ask, delete_session
+from chatbot.insights import generate_insights
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -232,6 +238,86 @@ def clear_chat_session(session_id):
   delete_session(session_id)
   return Response(
     json.dumps({'status': 'session cleared'}),
+    status=200, mimetype='application/json')
+
+
+import traceback as _traceback
+
+@app.route('/insights', methods=['POST'])
+def insights():
+  """
+  Generates humanized AI text interpretations for a repository analysis.
+
+  Request body (JSON):
+    {
+      "repo": {
+        "name": "<user/repo>",
+        "language": "<string>",
+        "loc": <int>,
+        "stars": <int>,
+        "forks": <int>,
+        "open_issues": <int>,
+        "contributors": <int>,
+        "commits": <int>
+      },
+      "metrics_by_category": [
+        {
+          "id": "<category_id>",
+          "working_group": "<string>",
+          "metrics": [
+            {
+              "id": "<metric_id>",
+              "name": "<string>",
+              "value": <number>,
+              "situation": "OK" | "REASONABLE" | "BAD",
+              "median_reference": <number | null>
+            }
+          ]
+        }
+      ],
+      "cluster": {
+        "similar_repos": ["<repo_name>", ...],
+        "total_repos_in_dataset": <int>
+      }
+    }
+
+  Response body (JSON):
+    {
+      "categories": { "<category_id>": "<text>", ... },
+      "cluster": "<text>",
+      "recommendations": "<text>"
+    }
+  """
+  data = request.get_json(force=True)
+
+  repo = data.get('repo')
+  metrics_by_category = data.get('metrics_by_category', [])
+  cluster = data.get('cluster', {})
+
+  if not repo or not metrics_by_category:
+    return Response(
+      json.dumps({'error': 'repo and metrics_by_category are required'}),
+      status=400, mimetype='application/json')
+
+  provider = os.environ.get('LLM_PROVIDER', 'groq').lower()
+  if provider == 'groq' and not os.environ.get('GROQ_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'GROQ_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+  if provider == 'openai' and not os.environ.get('OPENAI_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'OPENAI_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+
+  try:
+    result = generate_insights(repo, metrics_by_category, cluster)
+  except Exception as e:
+    return Response(
+      json.dumps({'error': str(e), 'detail': _traceback.format_exc()}),
+      status=500, mimetype='application/json')
+
+  return Response(
+    json.dumps(result, ensure_ascii=False),
     status=200, mimetype='application/json')
 
 
