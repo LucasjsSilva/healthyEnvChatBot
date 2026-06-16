@@ -8,6 +8,7 @@ from model.repository import RepositoryModel
 from model.analysis_request import AnalysisRequestModel
 from model.metric_category import MetricCategory
 from clustering.cluster import get_cluster
+from processor import process_repository_async
 from dotenv import load_dotenv
 from db import db
 from nanoid import generate
@@ -19,8 +20,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (must be called before any os.environ access)
+load_dotenv(override=True)
 
 # Database settings
 db_user = os.environ['DB_USER']
@@ -32,17 +33,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 
-# Creates database tables after first request
-@app.before_first_request
-def create_db():
-  with app.app_context():
-    from model.dataset import DatasetModel
-    from model.repository import RepositoryModel
-    from model.metric import MetricModel
-    from model.metric_repo import MetricRepoModel
-    from model.analysis_request import AnalysisRequestModel
-    from model.metric_category import MetricCategory
-    db.create_all()
+# Creates database tables at startup
+with app.app_context():
+  from model.dataset import DatasetModel
+  from model.repository import RepositoryModel
+  from model.metric import MetricModel
+  from model.metric_repo import MetricRepoModel
+  from model.analysis_request import AnalysisRequestModel
+  from model.metric_category import MetricCategory
+  db.create_all()
 
 
 @app.route('/datasets/<dataset_id>/cluster/<path:repo>')
@@ -116,6 +115,10 @@ def analysis_request(dataset_id: str):
     except KeyError:
       return ErrorResponses.missing_info
 
+    # Trigger background processing immediately after saving the request
+    gh_token = data.get('gh_token')
+    process_repository_async(app, analysis_request.id, dataset_id, data['repo_url'], gh_token)
+
     return Response(
       json.dumps(analysis_request.json(), indent=2),
       status=200, mimetype='application/json')
@@ -157,6 +160,168 @@ def auth_github():
     r.text,
     status=200, mimetype='application/json')
 
+
+# ─── Chatbot RAG endpoints ────────────────────────────────────────────────────
+
+from chatbot.session_manager import ask, delete_session
+from chatbot.insights import generate_insights
+
+@app.route('/chat', methods=['POST'])
+def chat():
+  """
+  Receives a user message and returns the chatbot answer.
+
+  Request body (JSON):
+    {
+      "session_id": "<string>",   # unique per browser session / user
+      "message":    "<string>",   # user question
+      "repo_context": {           # optional – current repo being viewed
+        "username": "<string>",
+        "repo":     "<string>",
+        "metrics":  { ... }       # metric values from the dashboard (optional)
+      }
+    }
+
+  Response body (JSON):
+    {
+      "answer": "<string>"
+    }
+  """
+  data = request.get_json(force=True)
+
+  session_id = data.get('session_id', '').strip()
+  message    = data.get('message', '').strip()
+
+  if not session_id or not message:
+    return Response(
+      json.dumps({'error': 'session_id and message are required'}),
+      status=400, mimetype='application/json')
+
+  provider = os.environ.get('LLM_PROVIDER', 'groq').lower()
+  if provider == 'groq' and not os.environ.get('GROQ_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'GROQ_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+  if provider == 'openai' and not os.environ.get('OPENAI_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'OPENAI_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+
+  # Optionally enrich the message with current repo context
+  repo_context = data.get('repo_context')
+  enriched_message = message
+  if repo_context:
+    username = repo_context.get('username', '')
+    repo     = repo_context.get('repo', '')
+    metrics  = repo_context.get('metrics', {})
+    if username and repo:
+      enriched_message = (
+        f"[Contexto: o usuário está analisando o repositório {username}/{repo}. "
+        f"Métricas atuais: {json.dumps(metrics, ensure_ascii=False)}]\n\n{message}"
+      )
+
+  try:
+    answer = ask(session_id, enriched_message)
+  except Exception as e:
+    return Response(
+      json.dumps({'error': str(e)}),
+      status=500, mimetype='application/json')
+
+  return Response(
+    json.dumps({'answer': answer}, ensure_ascii=False),
+    status=200, mimetype='application/json')
+
+
+@app.route('/chat/session/<session_id>', methods=['DELETE'])
+def clear_chat_session(session_id):
+  """Clears the conversation history for a session."""
+  delete_session(session_id)
+  return Response(
+    json.dumps({'status': 'session cleared'}),
+    status=200, mimetype='application/json')
+
+
+import traceback as _traceback
+
+@app.route('/insights', methods=['POST'])
+def insights():
+  """
+  Generates humanized AI text interpretations for a repository analysis.
+
+  Request body (JSON):
+    {
+      "repo": {
+        "name": "<user/repo>",
+        "language": "<string>",
+        "loc": <int>,
+        "stars": <int>,
+        "forks": <int>,
+        "open_issues": <int>,
+        "contributors": <int>,
+        "commits": <int>
+      },
+      "metrics_by_category": [
+        {
+          "id": "<category_id>",
+          "working_group": "<string>",
+          "metrics": [
+            {
+              "id": "<metric_id>",
+              "name": "<string>",
+              "value": <number>,
+              "situation": "OK" | "REASONABLE" | "BAD",
+              "median_reference": <number | null>
+            }
+          ]
+        }
+      ],
+      "cluster": {
+        "similar_repos": ["<repo_name>", ...],
+        "total_repos_in_dataset": <int>
+      }
+    }
+
+  Response body (JSON):
+    {
+      "categories": { "<category_id>": "<text>", ... },
+      "cluster": "<text>",
+      "recommendations": "<text>"
+    }
+  """
+  data = request.get_json(force=True)
+
+  repo = data.get('repo')
+  metrics_by_category = data.get('metrics_by_category', [])
+  cluster = data.get('cluster', {})
+
+  if not repo or not metrics_by_category:
+    return Response(
+      json.dumps({'error': 'repo and metrics_by_category are required'}),
+      status=400, mimetype='application/json')
+
+  provider = os.environ.get('LLM_PROVIDER', 'groq').lower()
+  if provider == 'groq' and not os.environ.get('GROQ_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'GROQ_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+  if provider == 'openai' and not os.environ.get('OPENAI_API_KEY', ''):
+    return Response(
+      json.dumps({'error': 'OPENAI_API_KEY not configured on the server'}),
+      status=500, mimetype='application/json')
+
+  try:
+    result = generate_insights(repo, metrics_by_category, cluster)
+  except Exception as e:
+    return Response(
+      json.dumps({'error': str(e), 'detail': _traceback.format_exc()}),
+      status=500, mimetype='application/json')
+
+  return Response(
+    json.dumps(result, ensure_ascii=False),
+    status=200, mimetype='application/json')
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
   app.run(debug=True)

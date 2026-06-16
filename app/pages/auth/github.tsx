@@ -31,12 +31,27 @@ export default function GitHub() {
         'Authorization': `token ${response.data.access_token}`
       }
     })
+
+    // Fetch primary email separately — GitHub may hide it on the /user endpoint
+    let primaryEmail = userDataRes.data.email
+    if (!primaryEmail) {
+      try {
+        const emailsRes = await axios.get(`https://api.github.com/user/emails`, {
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': `token ${response.data.access_token}`
+          }
+        })
+        const primary = emailsRes.data.find((e: any) => e.primary)
+        primaryEmail = primary?.email ?? null
+      } catch (_) {}
+    }
     // TODO: verifica se os dados do usuário logado foram obtidos com sucesso antes de continuar
     saveUserInfo('userData', JSON.stringify({
       'token': response.data.access_token,
       'login': userDataRes.data.login,
       'name': userDataRes.data.name,
-      'email': userDataRes.data.email,
+      'email': primaryEmail,
       'profilePicture': userDataRes.data.avatar_url,
       'timestamp': Date.now(),
     }))

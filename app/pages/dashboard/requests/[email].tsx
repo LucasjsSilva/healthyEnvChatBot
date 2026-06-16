@@ -18,8 +18,20 @@ const RequestsByEmail = () => {
   useEffect(() => {
     if (!router.isReady) return
     verifyAuth()
+    // If email param is "null", redirect to the correct login-based identifier
+    if (router.query.email === 'null') {
+      const raw = localStorage.getItem('userData')
+      if (raw) {
+        const user = JSON.parse(raw)
+        const identifier = user?.email || user?.login
+        if (identifier) {
+          Router.replace(`/dashboard/requests/${identifier}`)
+          return
+        }
+      }
+    }
     loadRequests()
-  }, [router.isReady])
+  }, [router.isReady, router.query.email])
 
   function verifyAuth() {
     const data = JSON.parse(localStorage.getItem('userData'))

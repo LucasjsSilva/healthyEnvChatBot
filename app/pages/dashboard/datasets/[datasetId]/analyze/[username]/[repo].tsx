@@ -18,6 +18,8 @@ import MetricsHint from "../../../../../../components/MetricsHint"
 import AnalysisSummarySection from "../../../../../../components/AnalysisSummarySection"
 import ChangeRepoModal from "../../../../../../components/ChangeRepoModal"
 import ChangeNModal from "../../../../../../components/ChangeNModal"
+import ChatBot from "../../../../../../components/ChatBot"
+import InsightCard from "../../../../../../components/InsightCard"
 
 enum MetricSituation {
   Ok = 'OK',
@@ -35,6 +37,8 @@ const Repo = () => {
   const [requestPayloads, setRequestPayloads] = useState([])
   const [analysisSummary, setAnalysisSummary] = useState({})
   const [nValue, setNValue] = useState(1)
+  const [insights, setInsights] = useState<any>(null)
+  const [insightsLoading, setInsightsLoading] = useState(false)
 
   // Modal
   const [open, setOpen] = useState(false)
@@ -60,9 +64,65 @@ const Repo = () => {
   //   }
   // }
 
+  // Fetches and stores AI-generated insights for the current repo analysis
+  async function loadInsights(repoInfo: any, metricsData: any[], allRepos: any[]) {
+    if (!repoInfo || !metricsData.length) return
+    setInsights(null)
+    setInsightsLoading(true)
+
+    const similarRepos = allRepos.filter((r: any) => r.near).map((r: any) => r.name)
+
+    const payload = {
+      repo: {
+        name: repoInfo.name,
+        language: repoInfo.language,
+        loc: repoInfo.loc,
+        stars: repoInfo.stars,
+        forks: repoInfo.forks,
+        open_issues: repoInfo.open_issues,
+        contributors: repoInfo.contributors,
+        commits: repoInfo.commits,
+      },
+      metrics_by_category: metricsData.map((cat: any) => ({
+        id: cat.id,
+        working_group: cat.working_group,
+        metrics: cat.metrics.map((m: any) => {
+          const refValues = m.values.reference.map((r: any) => r.value).filter((v: any) => v != null && !isNaN(v))
+          const median = refValues.length > 0 ? getMedian(refValues) : null
+          const selected = m.values.selected.value ?? 0
+          const diff_pct = (median != null && median !== 0 && selected != null)
+            ? Math.round(((selected - median) / median) * 100)
+            : null
+          return {
+            id: m.id,
+            name: m.name,
+            value: selected,
+            situation: m.situation,
+            median_reference: median,
+            diff_pct,
+          }
+        }),
+      })),
+      cluster: {
+        similar_repos: similarRepos,
+        total_repos_in_dataset: allRepos.length + 1,
+      },
+    }
+
+    try {
+      const res = await axios.post(`${Constants.baseUrl}/insights`, payload)
+      setInsights(res.data)
+    } catch (e) {
+      console.error('Failed to load insights', e)
+    } finally {
+      setInsightsLoading(false)
+    }
+  }
+
   // Load a repo's analysis
   async function loadRepo(datasetId: string | string[], repoName: string | string[], n: number) {
     setIsLoading(true)
+    setInsights(null)
 
     // API URLs
     const urlResults = `${Constants.baseUrl}/datasets/${datasetId}/cluster/${repoName}?near_n=${n}`
@@ -159,6 +219,9 @@ const Repo = () => {
 
       setMetricsData(metricsData)
       setAnalysisSummary({ okMetricsCount, reasonableMetricsCount, badMetricsCount })
+
+      // Kick off AI insights asynchronously (does not block page render)
+      loadInsights(resultsResponse['selected'], metricsData, resultsResponse['repos'])
     })
 
     setIsLoading(false)
@@ -240,6 +303,7 @@ const Repo = () => {
                 <span className={styles['section-title']}>Distribution</span>
               </div>
               <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
+              <InsightCard text={insights?.cluster} loading={insightsLoading} />
             </div>
 
             <div className={styles.section}>
@@ -252,19 +316,20 @@ const Repo = () => {
                   return <PlotGrid
                     key={metricCategory['id']}
                     data={metricCategory}
-
+                    insight={insights?.categories?.[metricCategory['id']]}
+                    insightLoading={insightsLoading}
                   />
                 })
               }
             </div>
-            {/* TODO: refazer esta seção, não ficou legal de nenhuma forma
-            
-            <div className={styles.section}>
-              <div className={styles['section-title']}>
-                <span>Analysis summary</span>
+            {(insightsLoading || insights?.recommendations) && (
+              <div className={styles.section}>
+                <div className={styles['section-title']}>
+                  <span>Recomendações</span>
+                </div>
+                <InsightCard text={insights?.recommendations} loading={insightsLoading} />
               </div>
-              <AnalysisSummarySection metricsCount={analysisSummary} />
-            </div> */}
+            )}
 
             <div className={styles.section}>
               <div className={styles['section-title']}>
@@ -287,6 +352,21 @@ const Repo = () => {
       <Popup open={openN} onClose={closeModalN} >
         <ChangeNModal closeModal={closeModalN} refreshAnalysis={refreshAnalysis} currNValue={+router.query.near} datasetCount={referenceReposInfo.length} datasetId={router.query.datasetId} userName={router.query.username} repoName={router.query.repo} />
       </Popup>
+
+      {/* RAG Chatbot — only shown after loading is complete */}
+      {!isLoading && (
+        <ChatBot
+          repoContext={{
+            username: router.query.username as string,
+            repo: router.query.repo as string,
+            metrics: Object.fromEntries(
+              metricsData.flatMap((cat: any) =>
+                cat.metrics.map((m: any) => [m.name, m.values.selected.value])
+              )
+            ),
+          }}
+        />
+      )}
     </>
   )
 }

@@ -16,8 +16,9 @@ class RepositoryModel(db.Model):
   commits = db.Column(db.Integer)
 
 
-  def __init__(self, id, name, language, loc, stars, forks, open_issues, contributors, commits):
+  def __init__(self, id, name, language, loc, stars, forks, open_issues, contributors, commits, dataset_id=None):
     self.id = id
+    self.dataset_id = dataset_id
     self.name = name
     self.language = language
     self.loc = loc
