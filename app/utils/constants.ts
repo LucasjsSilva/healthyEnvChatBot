@@ -1,13 +1,7 @@
 export default class Constants {
-  // Development URL
-  // static baseUrl = '';
-
-  // Production URL
+  // Empty string = calls go through the Next.js proxy (next.config.js rewrites)
+  // pointing to NEXT_PUBLIC_API_URL (default: http://localhost:5000)
   static baseUrl = '';
 
-  // Development
-  static ghCliendId = '';
-
-  // Production
-  // static ghCliendId = '';
+  static ghCliendId = process.env.NEXT_PUBLIC_GH_CLIENT_ID || '';
 }
