@@ -16,7 +16,7 @@ enum MetricSituation {
 
 interface MetricPlotProps {
   yAll: number[]
-  ySelected: number[]
+  ySelected: number
   labels: string[]
   name: string
   title: string

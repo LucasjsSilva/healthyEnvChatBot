@@ -59,7 +59,7 @@ const Header = ({ selectedIndex }: SelectedIndex) => {
         </div>
         <div className={styles.options}>
           <Link href='/auth'>
-            <a><span className="px-3 py-1 mr-5 bg-blue-500 rounded-md cursor-pointer"><b>Log in</b></span></a>
+            <a><span className={styles.signupButton}>Log in</span></a>
           </Link>
           <a href='https://github.com/SERG-UFPI/healthyEnv' className={styles.icon}>
             <FontAwesomeIcon icon={faGithub} />

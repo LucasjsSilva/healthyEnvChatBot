@@ -1,32 +1,41 @@
+/* ─── RepoListItem ───────────────────────────────────────────── */
 .link {
-  font-size: 18px;
+  display: block;
   width: 100%;
+  text-decoration: none;
+  color: inherit;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: 10px;
   background-color: #fff;
   padding: 16px 20px;
-  margin: 3px 0px;
-  transition: all 0.3s;
+  margin: 4px 0;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .container:hover {
-  box-shadow: 0px 0px 5px #b0b0b0;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 10%);
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
 }
 
 .title {
-  font-weight: bold;
-  padding-bottom: 2px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #0f172a;
+  padding-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chip-list {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  /* padding-top: 4px; */
 }

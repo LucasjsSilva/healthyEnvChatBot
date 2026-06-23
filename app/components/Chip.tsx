@@ -1,13 +1,8 @@
+import styles from '../styles/Chip.module.css'
+
 const Chip = ({ label }) => {
   return (
-    <div style={{
-      marginRight: '10px',
-      marginTop: '5px',
-      backgroundColor: '#c9cfde',
-      padding: '4px 10px',
-      borderRadius: '20px',
-      fontSize: 14
-    }}>
+    <div className={styles.chip}>
       {label}
     </div>
   )

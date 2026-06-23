@@ -5,6 +5,8 @@
   width: fit-content;
   flex-wrap: wrap;
   flex-basis: auto;
+  opacity: 0.9;
+  margin-top: 8px;
 }
 
 .grid::after {
@@ -19,11 +21,16 @@
 }
 
 .workingGroup {
-  font-size: 20px;
-  font-weight: bold;
-  padding-bottom: 5px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  padding-bottom: 4px;
 }
 
 .description {
-  padding-bottom: 10px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+  padding-bottom: 12px;
 }

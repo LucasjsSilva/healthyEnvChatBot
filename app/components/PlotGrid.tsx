@@ -38,7 +38,7 @@ const PlotGrid: FC<{ data: PlotGridProps; insight?: string; insightLoading?: boo
   }
 
   return (
-    <div>{
+    <div>
       <div className={styles.metricCategory}>
         <span className={styles.workingGroup}>
           {data['working_group']}
@@ -47,11 +47,10 @@ const PlotGrid: FC<{ data: PlotGridProps; insight?: string; insightLoading?: boo
           {data['description']}
         </span>
       </div>
-    }
+      <InsightCard text={insight} loading={insightLoading ?? false} />
       <div className={styles.grid} style={style}>
         {generatePlots()}
       </div>
-      <InsightCard text={insight} loading={insightLoading ?? false} />
     </div>
   )
 }

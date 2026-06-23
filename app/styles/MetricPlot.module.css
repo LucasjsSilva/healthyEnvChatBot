@@ -1,14 +1,18 @@
 .box {
-  transition: box-shadow .3s;
-  border-radius: 5px;
-  background: #fafafa;
+  transition: box-shadow 0.18s ease, opacity 0.18s ease;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   margin-bottom: 10px;
-  padding: 5px;
+  padding: 6px;
   width: fit-content;
+  box-shadow: none;
+  opacity: 0.82;
 }
 
 .box:hover {
-  box-shadow: 0 0 6px rgba(33,33,33,.2); 
+  opacity: 1;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 7%);
 }
 
 .medianRow {
@@ -21,7 +25,7 @@
 
 .medianLabel {
   font-size: 12px;
-  color: #374151;
+  color: #64748b;
 }
 
 .diffBadge {
