@@ -26,7 +26,7 @@ const Requests = () => {
   async function loadRepositories() {
     if (typeof window === "undefined") return
     try {
-      const raw = localStorage.getItem('userData')
+      const raw = sessionStorage.getItem('userData')
       if (!raw) {
         setLoadError('Usuário não autenticado. Faça login novamente.')
         return
@@ -71,7 +71,7 @@ const Requests = () => {
   }, [])
 
   function verifyAuth() {
-    const data = JSON.parse(localStorage.getItem('userData'))
+    const data = JSON.parse(sessionStorage.getItem('userData'))
 
     if (data == undefined) {
       Router.push(`/auth?next=${router.asPath}`)

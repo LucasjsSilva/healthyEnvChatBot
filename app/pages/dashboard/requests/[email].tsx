@@ -20,7 +20,7 @@ const RequestsByEmail = () => {
     verifyAuth()
     // If email param is "null", redirect to the correct login-based identifier
     if (router.query.email === 'null') {
-      const raw = localStorage.getItem('userData')
+      const raw = sessionStorage.getItem('userData')
       if (raw) {
         const user = JSON.parse(raw)
         const identifier = user?.email || user?.login
@@ -34,7 +34,7 @@ const RequestsByEmail = () => {
   }, [router.isReady, router.query.email])
 
   function verifyAuth() {
-    const data = JSON.parse(localStorage.getItem('userData'))
+    const data = JSON.parse(sessionStorage.getItem('userData'))
 
     if (data == undefined) {
       Router.push(`/auth?next=${router.asPath}`)

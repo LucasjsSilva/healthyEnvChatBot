@@ -65,7 +65,7 @@ export default function GitHub() {
 
   function saveUserInfo(key: string, value: string) {
     if (typeof window !== "undefined") {
-      localStorage.setItem(key, value)
+      sessionStorage.setItem(key, value)
     }
   }
 

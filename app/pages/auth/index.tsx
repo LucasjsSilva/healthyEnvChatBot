@@ -14,7 +14,7 @@ export default function Auth() {
   const [showAuthOptions, setShowAuthOptions] = useState(false);
 
   function checkCurrentAuth() {
-    const data = JSON.parse(localStorage.getItem('userData'))
+    const data = JSON.parse(sessionStorage.getItem('userData'))
 
     if (data == undefined) {
       setShowAuthOptions(true)
