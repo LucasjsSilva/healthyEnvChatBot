@@ -11,7 +11,7 @@ import { faArrowRightArrowLeft, faArrowsRotate, faCertificate, faCheck } from "@
 import { getFirstQuartile, getMedian, getThirdQuartile } from "../../../../../../functions/stats"
 import "react-activity/dist/Dots.css";
 import PlotGrid from "../../../../../../components/PlotGrid"
-import DashboardHeader from "../../../../../../components/DashboardHeader"
+import Header from "../../../../../../components/Header"
 import RepoInfos from "../../../../../../components/RepoInfos"
 import NearReposPlot from "../../../../../../components/NearReposPlot"
 import MetricsHint from "../../../../../../components/MetricsHint"
@@ -236,7 +236,7 @@ const Repo = () => {
       <Head>
         <title>{`HealthyEnv - Análise de ${router.query.repo}`} </title>
       </Head>
-      <DashboardHeader selectedIndex={1} />
+      <Header />
       {
         isLoading
           ? <div style={{

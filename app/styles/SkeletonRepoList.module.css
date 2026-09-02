@@ -1,0 +1,54 @@
+/* ─── Skeleton loading state for the repository list ────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background-color: var(--color-surface, #fff);
+  padding: 16px 20px;
+  margin: 4px 0;
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #edf1f6 25%, #f8fafc 37%, #edf1f6 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 6px;
+}
+
+.title {
+  height: 15px;
+  margin-bottom: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  height: 22px;
+  border-radius: 9999px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}

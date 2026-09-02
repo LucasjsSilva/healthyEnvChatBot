@@ -6,7 +6,7 @@ import styles from '../../styles/Admin.module.css'
 const AdminDashboard: React.FC = () => {
   return (
     <div className={styles.adminContainer}>
-      <Header selectedIndex={5} />
+      <Header />
       
       <div className={styles.adminContent}>
         <div className={styles.adminHeader}>

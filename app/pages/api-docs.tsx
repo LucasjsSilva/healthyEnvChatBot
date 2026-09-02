@@ -7,7 +7,7 @@ const ApiDocs = () => {
       <Head>
         <title>HealthyEnv - Sobre</title>
       </Head>
-      <Header selectedIndex={2} />
+      <Header />
       <div>
         {'(Landing)'}
         API

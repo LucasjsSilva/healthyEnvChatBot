@@ -8,7 +8,6 @@ import { Dots } from 'react-activity'
 import "react-activity/dist/Dots.css";
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
-import DashboardHeader from '../../../components/DashboardHeader'
 
 const RequestsByEmail = () => {
   const router = useRouter()
@@ -70,7 +69,7 @@ const RequestsByEmail = () => {
       <Head>
         <title>{`HealthyEnv - Solicitações de ${router.query.email}`}</title>
       </Head>
-      <DashboardHeader selectedIndex={2} />
+      <Header />
       <div className={styles.requestByEmail}>
         <div className={styles.info}>
           <span className={styles.title}>

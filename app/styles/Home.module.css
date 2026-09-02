@@ -28,6 +28,7 @@
   background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 24px rgb(0 0 0 / 8%);
+  animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .image {
@@ -42,6 +43,25 @@
   align-items: flex-start;
   justify-content: center;
   gap: 12px;
+  animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imageContainer,
+  .presentation {
+    animation: none;
+  }
 }
 
 .title {
@@ -112,6 +132,128 @@
   text-decoration: underline;
 }
 
+/* ─── Stats strip ─────────────────────────────────────────────── */
+.statsSection {
+  background-color: #1e2d4a;
+  color: #f1f5f9;
+}
+
+.statsContent {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #7dd3fc, #a5b4fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* ─── How it works ───────────────────────────────────────────── */
+.stepsSection {
+  background-color: var(--color-surface);
+  scroll-margin-top: 80px;
+}
+
+.stepsContent {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+  padding: 64px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stepsTitle {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.stepsSubtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  padding-top: 8px;
+  padding-bottom: 40px;
+  text-align: center;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.stepCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px 24px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.stepCard:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.stepTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stepDescription {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media screen and (max-width: 800px) {
   .firstSection {
@@ -127,5 +269,14 @@
 
   .presentation {
     width: 100%;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsContent {
+    justify-content: center;
+    gap: 32px;
   }
 }

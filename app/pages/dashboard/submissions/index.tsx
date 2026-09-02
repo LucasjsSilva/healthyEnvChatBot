@@ -6,7 +6,7 @@ import { Dots } from 'react-activity'
 import 'react-activity/dist/Dots.css'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
-import DashboardHeader from '../../../components/DashboardHeader'
+import Header from '../../../components/Header'
 import styles from '../../../styles/RequestsByEmail.module.css'
 
 const SubmissionsPage = () => {
@@ -95,7 +95,7 @@ const SubmissionsPage = () => {
       <Head>
         <title>My Submissions | HealthyEnv</title>
       </Head>
-      <DashboardHeader selectedIndex={3} />
+      <Header />
 
       <div className={styles.info}>
         <span className={styles.title}>My Submissions</span>

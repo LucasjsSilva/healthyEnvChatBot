@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Router from 'next/router'
 import axios from 'axios'
 import Constants from '../../utils/constants'
-import DashboardHeader from '../../components/DashboardHeader'
+import Header from '../../components/Header'
 import DatasetPicker from '../../components/DatasetPicker'
 
 interface Repo {
@@ -73,7 +73,7 @@ export default function ProfilePage() {
       <Head>
         <title>Meu Perfil - HealthyEnv</title>
       </Head>
-      <DashboardHeader selectedIndex={1} />
+      <Header />
       <div style={{ maxWidth: 1024, margin: '0 auto', padding: 16 }}>
         <h1 className="text-2xl font-semibold mb-4">Meus repositórios</h1>
         {loading && <div>Carregando...</div>}

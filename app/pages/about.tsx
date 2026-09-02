@@ -8,7 +8,7 @@ const About = () => {
       <Head>
         <title>HealthyEnv - Sobre</title>
       </Head>
-      <Header selectedIndex={4} />
+      <Header />
       <div className={styles.container}>
         <h1>Sobre o healthyEnv</h1>
         <p>

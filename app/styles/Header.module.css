@@ -55,7 +55,6 @@
   background-color: #2563eb;
   padding: 6px 16px;
   border-radius: 9999px;
-  margin-right: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,6 +79,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 20px;
 }
 
 .authUserArea {
@@ -186,6 +186,88 @@
   color: #f1f5f9;
 }
 
+.sidenavAuth {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+/* ─── Account popup (avatar dropdown) ────────────────────────── */
+.popup {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.caret {
+  margin-left: 10px;
+  font-size: 13px;
+  color: #94a3b8;
+  transition: color var(--transition, 0.18s ease);
+}
+
+.popup:hover .caret {
+  color: #f1f5f9;
+}
+
+.popuptext {
+  visibility: hidden;
+  margin-right: calc(calc(calc(100% - 1280px) / 2) + 16px);
+  width: 220px;
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text, #0f172a);
+  border: 1px solid var(--color-border, #e2e8f0);
+  text-align: left;
+  border-radius: 12px 0 12px 12px;
+  padding: 6px 0;
+  position: absolute;
+  z-index: 1;
+  top: 85%;
+  right: 0%;
+  opacity: 0;
+  box-shadow: var(--shadow-card-hover, 0 4px 16px rgb(0 0 0 / 10%));
+  transform: translateY(-8px);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out, visibility 0.18s ease-out;
+}
+
+.popup .show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.popupButton {
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+  transition: background var(--transition, 0.18s ease), color var(--transition, 0.18s ease);
+}
+
+.popupButton:hover {
+  background-color: var(--color-surface-raised, #f8fafc);
+  color: var(--color-text, #0f172a);
+}
+
+.popupButtonLabel {
+  font-size: 14px;
+}
+
+@media screen and (max-width: 1280px) {
+  .popuptext {
+    margin-right: 16px;
+  }
+}
+
 @media screen and (max-width: 800px) {
   .link {
     display: none;
@@ -193,5 +275,9 @@
 
   .drawerButton {
     display: block;
+  }
+
+  .authUserInfo {
+    display: none;
   }
 }

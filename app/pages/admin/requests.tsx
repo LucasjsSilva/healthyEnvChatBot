@@ -110,7 +110,7 @@ const AdminRequests: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <Header selectedIndex={5} />
+        <Header />
         <div className={styles.content}>
           <div className={styles.loading}>Loading requests...</div>
         </div>
@@ -120,7 +120,7 @@ const AdminRequests: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <Header selectedIndex={5} />
+      <Header />
 
       <div className={styles.content}>
         <div className={styles.header}>

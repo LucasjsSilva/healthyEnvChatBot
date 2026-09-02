@@ -7,7 +7,7 @@ const Docs = () => {
       <Head>
         <title>HealthyEnv - Sobre</title>
       </Head>
-      <Header selectedIndex={3} />
+      <Header />
       <div>
         {'(Landing)'}
         Docs
