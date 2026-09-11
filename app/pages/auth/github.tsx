@@ -2,9 +2,8 @@ import Router, { useRouter } from "next/router";
 import Head from "next/head";
 import { useEffect } from "react";
 import axios from "axios";
-import { Dots } from 'react-activity'
-import "react-activity/dist/Dots.css";
 import Constants from "../../utils/constants";
+import styles from '../../styles/AuthCallback.module.css'
 
 export default function GitHub() {
   const router = useRouter()
@@ -72,17 +71,13 @@ export default function GitHub() {
   return (
     <>
       <Head>
-        <title>Please wait</title>
+        <title>Autenticando... - HealthyEnv</title>
       </Head>
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <Dots color='#000000' size={18} speed={1} animating={true} />
-        <span>Please wait...</span>
+      <div className={styles.container}>
+        <span className={styles.brand}>HealthyEnv</span>
+        <span className={styles.spinner} />
+        <span className={styles.message}>Autenticando com o GitHub…</span>
+        <span className={styles.subtitle}>Você será redirecionado em instantes.</span>
       </div>
     </>
   );

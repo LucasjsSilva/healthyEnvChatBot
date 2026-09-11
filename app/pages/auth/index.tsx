@@ -4,8 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import Link from "next/link";
 import { useEffect, useState } from 'react';
-import { Dots } from 'react-activity'
-import "react-activity/dist/Dots.css";
 import Router, { useRouter } from "next/router";
 import Constants from '../../utils/constants';
 
@@ -35,29 +33,32 @@ export default function Auth() {
   return (
     <>
       <Head>
-        <title>HealthyEnv - Auth</title>
+        <title>Entrar - HealthyEnv</title>
       </Head>
       {showAuthOptions ? (
         <div className={styles.auth}>
-          <span className={styles.title}>Welcome to <b>HealthyEnv</b></span>
-          <span className={styles.subtitle}>
-            Log in or sign up with one of the following options:
-          </span>
-          <Link href={`https://github.com/login/oauth/authorize?client_id=${Constants.ghCliendId}&redirect_uri=${encodeURIComponent(`http://localhost:3000/auth/github?next=${router.query.next ?? '/dashboard/datasets'}`)}`}>
-            <a>
-              <div className={styles.option}>
-                <FontAwesomeIcon icon={faGithub} />
-                <span className={styles.optionLabel}>GitHub</span>
-              </div>
-            </a>
-          </Link>
-          <Link href='/'>
-            <a className={styles.backHomeButton}>Go back to HealthyEnv home</a>
-          </Link>
+          <div className={styles.card}>
+            <span className={styles.brand}>HealthyEnv</span>
+            <span className={styles.title}>Bem-vindo(a) de volta</span>
+            <span className={styles.subtitle}>
+              Entre com sua conta do GitHub para analisar repositórios e acompanhar suas submissões.
+            </span>
+            <Link href={`https://github.com/login/oauth/authorize?client_id=${Constants.ghCliendId}&redirect_uri=${encodeURIComponent(`http://localhost:3000/auth/github?next=${router.query.next ?? '/dashboard/datasets'}`)}`}>
+              <a style={{ width: '100%' }}>
+                <div className={styles.option}>
+                  <FontAwesomeIcon icon={faGithub} className={styles.optionIcon} />
+                  <span className={styles.optionLabel}>Entrar com o GitHub</span>
+                </div>
+              </a>
+            </Link>
+            <Link href='/'>
+              <a className={styles.backHomeButton}>Voltar para o início</a>
+            </Link>
+          </div>
         </div>
       ) : (
         <div className={styles.auth}>
-          <Dots color='#000000' size={18} speed={1} animating={true} />
+          <span className={styles.spinner} />
         </div>)
       }
     </>

@@ -1,103 +1,131 @@
+/* ─── Auth screen ─────────────────────────────────────────────── */
 .auth {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 1280px;
-  padding: 16px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-card-hover, 0 4px 16px rgb(0 0 0 / 10%));
+  padding: 40px 32px;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.brand {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(90deg, var(--color-primary, #2563eb), var(--color-accent, #6366f1));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding-bottom: 20px;
 }
 
 .title {
-  font-size: 22px;
-  padding-bottom: 50px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+  padding-bottom: 8px;
 }
 
 .subtitle {
-  padding-bottom: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+  padding-bottom: 28px;
+  max-width: 300px;
 }
 
 .option {
-  transition: background-color .3s;
-  width: 300px;
-  background-color: #111111;
-  color: #FFFFFF;
-  padding: 10px;
-  margin: 4px;
-  border-radius: 5px;
+  transition: background-color var(--transition, 0.18s ease), transform var(--transition, 0.18s ease), box-shadow var(--transition, 0.18s ease);
+  width: 100%;
+  background-color: #1e2d4a;
+  color: #ffffff;
+  padding: 12px;
+  border-radius: var(--radius-md, 8px);
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 2px 2px 6px gray;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 20%);
 }
 
 .option:hover {
-  background-color: #1f1f1f;
+  background-color: #16213a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgb(15 23 42 / 25%);
+}
+
+.optionIcon {
+  font-size: 16px;
 }
 
 .optionLabel {
-  padding-left: 8px;
-  padding-bottom: 2px;
-}
-
-.changeType {
-  padding: 10px;
+  padding-left: 10px;
 }
 
 .backHomeButton {
-  font-weight: bold;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-text-secondary, #475569);
+  transition: color var(--transition, 0.18s ease);
+  padding-top: 24px;
+}
+
+.backHomeButton:hover {
+  color: var(--color-primary, #2563eb);
   text-decoration: underline;
-  cursor: pointer;
-  padding: 20px;
 }
 
-.changeTypeButton {
-  font-weight: bold;
-  text-decoration: underline;
-  cursor: pointer;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-border, #e2e8f0);
+  border-top-color: var(--color-primary, #2563eb);
+  animation: spin 0.8s linear infinite;
 }
 
-.emailAuthForm {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.emailAuthInput {
-  padding: 12px 8px;
-  border: none;
-  background-color: #ececec;
-  margin: 5px;
-  border-radius: 6px;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.emailAuthFormTitle {
-  font-size: 22px;
-  padding: 6px;
-}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
 
-.emailAuthFormLink {
-  text-decoration: underline;
-  font-size: 14px;
-  margin-bottom: 20px;
-  cursor: pointer;
-}
-
-.emailAuthButton {
-  transition: background-color .3s;
-  margin: 10px;
-  padding: 5px 10px;
-  border: none;
-  background-color: #2590DA;
-  color: #FFFFFF;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.emailAuthButton:hover {
-  background-color: #206bA0;
+  .card {
+    animation: none;
+  }
 }

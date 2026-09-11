@@ -1,0 +1,69 @@
+/* ─── GitHub OAuth callback ("please wait") screen ───────────────── */
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  animation: fadeIn 0.4s ease both;
+}
+
+.brand {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(90deg, var(--color-primary, #2563eb), var(--color-accent, #6366f1));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-border, #e2e8f0);
+  border-top-color: var(--color-primary, #2563eb);
+  animation: spin 0.8s linear infinite;
+}
+
+.message {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text, #0f172a);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary, #475569);
+  max-width: 320px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .container {
+    animation: none;
+  }
+}
