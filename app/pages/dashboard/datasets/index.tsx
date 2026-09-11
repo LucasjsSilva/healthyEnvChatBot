@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import styles from '../../../styles/Datasets.module.css'
 import RepoListItem from '../../../components/RepoListItem'
@@ -19,19 +19,20 @@ const Datasets = () => {
   const [selectedDataset, setSelectedDataset] = useState()
   const [nValue, setNValue] = useState(1)
 
-  const datasetsIdList = []
+  const datasetsIdListRef = useRef<string[]>([])
 
   useEffect(() => {
-    loadDatasets().then(() => loadRepos(datasetsIdList[0]))
+    loadDatasets().then(() => loadRepos(datasetsIdListRef.current[0]))
   }, [])
 
   async function loadDatasets() {
     setIsLoadingDatasets(true)
     const response = await axios.get(`${Constants.baseUrl}/datasets`)
     const optionList = []
+    datasetsIdListRef.current = []
 
     response.data.items.forEach((dataset: object, index: number) => {
-      datasetsIdList.push(dataset['id'])
+      datasetsIdListRef.current.push(dataset['id'])
       optionList.push(
         <option value={index} key={dataset['id']}>
           {Buffer.from(dataset['name'], 'utf-8').toString()}
@@ -39,7 +40,7 @@ const Datasets = () => {
       )
     })
 
-    setSelectedDataset(datasetsIdList[0])
+    setSelectedDataset(datasetsIdListRef.current[0])
     setDatasetsOptions([...optionList])
     setIsLoadingDatasets(false)
   }
@@ -87,8 +88,9 @@ const Datasets = () => {
                   className={styles.inputs}
                   id='dataset'
                   onChange={(e) => {
-                    setSelectedDataset(datasetsIdList[Number(e.target.value)])
-                    loadRepos(datasetsIdList[Number(e.target.value)])
+                    const datasetId = datasetsIdListRef.current[Number(e.target.value)]
+                    setSelectedDataset(datasetId)
+                    loadRepos(datasetId)
                   }}
                 >
                   {datasetsOptions}
