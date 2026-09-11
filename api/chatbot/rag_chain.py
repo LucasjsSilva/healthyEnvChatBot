@@ -87,8 +87,8 @@ def _build_vectorstore() -> FAISS:
 def _build_llm() -> BaseChatModel:
     """
     Returns the LLM based on LLM_PROVIDER env var.
-    - 'groq'   -> ChatGroq (free tier, llama-3.3-70b) — needs GROQ_API_KEY
-    - 'openai' -> ChatOpenAI                          — needs OPENAI_API_KEY
+    - 'groq'   -> ChatGroq (free tier) — needs GROQ_API_KEY, model via GROQ_MODEL
+    - 'openai' -> ChatOpenAI           — needs OPENAI_API_KEY
     """
     provider = os.environ.get("LLM_PROVIDER", "groq").lower()
     if provider == "groq":
@@ -96,7 +96,9 @@ def _build_llm() -> BaseChatModel:
         groq_key = os.environ.get("GROQ_API_KEY", "")
         if not groq_key:
             raise ValueError("GROQ_API_KEY not configured")
-        return ChatGroq(model="llama-3.3-70b-versatile", temperature=0.2, api_key=groq_key)
+        # llama models are no longer available on Groq for all accounts; default to a widely available model
+        groq_model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+        return ChatGroq(model=groq_model, temperature=0.2, api_key=groq_key)
     # OpenAI fallback
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if not openai_key:
