@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
-import { Dots } from 'react-activity'
-import 'react-activity/dist/Dots.css'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
 import Header from '../../../components/Header'
+import Reveal from '../../../components/Reveal'
+import SkeletonRepoList from '../../../components/SkeletonRepoList'
 import styles from '../../../styles/RequestsByEmail.module.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 const SubmitRepositoryPage = () => {
   const router = useRouter()
@@ -107,7 +109,7 @@ const SubmitRepositoryPage = () => {
 
   async function createDataset() {
     if (!newDsName.trim()) {
-      alert('Dataset name is required.')
+      alert('O nome do dataset é obrigatório.')
       return
     }
     try {
@@ -124,7 +126,7 @@ const SubmitRepositoryPage = () => {
         if (resp.data?.id) setSelectedDataset(resp.data.id)
       }
     } catch (error: any) {
-      alert(error?.response?.data?.error || 'Error creating dataset')
+      alert(error?.response?.data?.error || 'Erro ao criar o dataset.')
     } finally {
       setIsCreatingDataset(false)
     }
@@ -172,167 +174,167 @@ const SubmitRepositoryPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Dots color="#000000" size={32} speed={1} animating={true} />
-      </div>
+      <>
+        <Header />
+        <div className={styles.loadingInline} style={{ height: '70vh' }}>
+          <span className={styles.spinner} />
+          <span className={styles.loadingText}>Carregando...</span>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className={styles.requestByEmail}>
+    <>
       <Head>
-        <title>Submit Repository | HealthyEnv</title>
+        <title>HealthyEnv - Enviar repositório</title>
       </Head>
       <Header />
+      <div className={styles.container}>
+        <div className={styles.infoTop}>
+          <span className={styles.title}>Enviar repositório</span>
+          <span className={styles.subtitle}>Envie um novo repositório para análise</span>
+          <span className={styles.description}>
+            Escolha um dataset de destino e selecione um repositório da sua conta do GitHub para analisar.
+          </span>
 
-      <div className={styles.info}>
-        <span className={styles.title}>Submit Repository</span>
-        <span className={styles.subtitle}>Submit a new repository for analysis</span>
-        <span className={styles.description}>
-          Select a dataset and choose a repository from your GitHub account to analyze.
-        </span>
-
-        <div className="mt-4 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label htmlFor="dataset" className="block text-sm font-medium text-gray-700 mb-1">Dataset</label>
-            <div className="flex gap-2">
-              <select
-                id="dataset"
-                className="flex-1 border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                value={selectedDataset}
-                onChange={(e) => setSelectedDataset(e.target.value)}
-                disabled={isLoading || datasets.length === 0}
-              >
-                {datasets.map((dataset) => (
-                  <option key={dataset.id} value={dataset.id}>{dataset.name}</option>
-                ))}
-              </select>
-              <button
-                className="border border-gray-300 rounded-md py-2 px-3 text-sm text-gray-700 hover:bg-gray-50"
-                onClick={() => setShowCreateModal(true)}
-              >
-                + New
-              </button>
+          <div className={styles.controlsRow}>
+            <div className={styles.fieldGroup}>
+              <label htmlFor="dataset" className={styles.labels}>Dataset</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  id="dataset"
+                  className={styles.inputs}
+                  style={{ flex: 1 }}
+                  value={selectedDataset}
+                  onChange={(e) => setSelectedDataset(e.target.value)}
+                  disabled={datasets.length === 0}
+                >
+                  {datasets.map((dataset) => (
+                    <option key={dataset.id} value={dataset.id}>{dataset.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className={styles.newDatasetButton}
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  <FontAwesomeIcon icon={faPlus} />
+                  Novo
+                </button>
+              </div>
+            </div>
+            <div className={`${styles.fieldGroup} ${styles.searchGroup}`}>
+              <label htmlFor="search" className={styles.labels}>Buscar repositórios</label>
+              <div className={styles.searchWrapper}>
+                <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  id="search"
+                  className={styles.searchInput}
+                  placeholder="Buscar repositórios..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
           </div>
-          <div className="flex-1">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">Search repositories</label>
-            <input
-              type="text"
-              id="search"
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-              placeholder="Search repositories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        </div>
+
+        {submitNotice && (
+          <div className={`${styles.notice} ${submitNotice.type === 'success' ? styles.success : styles.error}`}>
+            {submitNotice.text}
           </div>
-        </div>
-      </div>
+        )}
 
-      {submitNotice && (
-        <div className={`${styles.notice} ${submitNotice.type === 'success' ? styles.success : styles.error}`}>
-          {submitNotice.text}
-        </div>
-      )}
-
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         {isLoadingRepos ? (
-          <div className="flex justify-center py-12"><Dots /></div>
+          <SkeletonRepoList count={6} />
         ) : filteredRepos.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {filteredRepos.map((repo) => (
-              <li key={repo.id} className="px-6 py-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-emerald-600 truncate">{repo.full_name}</p>
-                    <p className="mt-1 text-sm text-gray-500 truncate">{repo.description || 'No description'}</p>
-                  </div>
-                  <div className="ml-4 flex-shrink-0">
+          <div className={styles.list}>
+            {filteredRepos.map((repo, index) => {
+              const key = String(repo.full_name || repo.name)
+              return (
+                <Reveal key={repo.id} delay={Math.min(index, 8) * 40}>
+                  <div className={styles.repoCard}>
+                    <div className={styles.repoInfo}>
+                      <span className={styles.repoName}>{repo.full_name}</span>
+                      <span className={styles.repoDescription}>{repo.description || 'Sem descrição'}</span>
+                    </div>
                     <button
                       type="button"
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none disabled:opacity-50"
+                      className={styles.submitButton}
                       onClick={() => submitRepository(repo)}
                       disabled={!!submittingRepoKey || !selectedDataset}
                     >
-                      {submittingRepoKey === String(repo.full_name || repo.name) ? 'Submitting...' : 'Submit for Analysis'}
+                      {submittingRepoKey === key ? 'Enviando...' : 'Enviar para análise'}
                     </button>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </Reveal>
+              )
+            })}
+          </div>
         ) : (
-          <div className="text-center py-12">
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No repositories found</h3>
-            <p className="mt-1 text-sm text-gray-500">
+          <div className={styles.emptyState}>
+            <div className={styles.emptyTitle}>Nenhum repositório encontrado</div>
+            <div className={styles.emptyDescription}>
               {searchTerm
-                ? 'No repositories match your search criteria.'
-                : 'You need to connect your GitHub account to see your repositories.'}
-            </p>
+                ? 'Nenhum repositório corresponde à sua busca.'
+                : 'Conecte sua conta do GitHub para ver seus repositórios.'}
+            </div>
           </div>
         )}
       </div>
 
       {showCreateModal && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <span className={styles.modalTitle}>Criar novo dataset</span>
+            <div className={styles.modalField}>
+              <label htmlFor="dataset-name" className={styles.labels}>Nome *</label>
+              <input
+                type="text"
+                id="dataset-name"
+                className={styles.modalInput}
+                placeholder="Digite o nome do dataset"
+                value={newDsName}
+                onChange={(e) => setNewDsName(e.target.value)}
+                disabled={isCreatingDataset}
+              />
             </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div className="mt-3 text-center sm:mt-5">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Create New Dataset</h3>
-                <div className="mt-4">
-                  <div className="mb-4">
-                    <label htmlFor="dataset-name" className="block text-sm font-medium text-gray-700 text-left mb-1">Name *</label>
-                    <input
-                      type="text"
-                      id="dataset-name"
-                      className="block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Enter dataset name"
-                      value={newDsName}
-                      onChange={(e) => setNewDsName(e.target.value)}
-                      disabled={isCreatingDataset}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label htmlFor="dataset-desc" className="block text-sm font-medium text-gray-700 text-left mb-1">Description</label>
-                    <textarea
-                      id="dataset-desc"
-                      rows={3}
-                      className="block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Enter dataset description (optional)"
-                      value={newDsDesc}
-                      onChange={(e) => setNewDsDesc(e.target.value)}
-                      disabled={isCreatingDataset}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 disabled:opacity-50 sm:col-start-2 sm:text-sm"
-                  onClick={createDataset}
-                  disabled={isCreatingDataset || !newDsName.trim()}
-                >
-                  {isCreatingDataset ? 'Creating...' : 'Create Dataset'}
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:col-start-1 sm:text-sm"
-                  onClick={() => setShowCreateModal(false)}
-                  disabled={isCreatingDataset}
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className={styles.modalField}>
+              <label htmlFor="dataset-desc" className={styles.labels}>Descrição</label>
+              <textarea
+                id="dataset-desc"
+                rows={3}
+                className={styles.modalTextarea}
+                placeholder="Digite a descrição do dataset (opcional)"
+                value={newDsDesc}
+                onChange={(e) => setNewDsDesc(e.target.value)}
+                disabled={isCreatingDataset}
+              />
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalSecondaryButton}
+                onClick={() => setShowCreateModal(false)}
+                disabled={isCreatingDataset}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.modalPrimaryButton}
+                onClick={createDataset}
+                disabled={isCreatingDataset || !newDsName.trim()}
+              >
+                {isCreatingDataset ? 'Criando...' : 'Criar dataset'}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 

@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import RequestListItem from '../../../components/RequestListItem'
-import { Dots } from 'react-activity'
-import 'react-activity/dist/Dots.css'
+import Reveal from '../../../components/Reveal'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
 import Header from '../../../components/Header'
@@ -91,39 +90,43 @@ const SubmissionsPage = () => {
   }, [requests, selectedDataset])
 
   return (
-    <div className={styles.requestByEmail}>
+    <>
       <Head>
-        <title>My Submissions | HealthyEnv</title>
+        <title>HealthyEnv - Minhas submissões</title>
       </Head>
       <Header />
+      <div className={styles.container}>
+        <div className={styles.infoTop}>
+          <span className={styles.title}>Minhas submissões</span>
+          <span className={styles.subtitle}>Acompanhe o status dos repositórios que você enviou para análise</span>
 
-      <div className={styles.info}>
-        <span className={styles.title}>My Submissions</span>
-        <span className={styles.subtitle}>Track your repository analysis submissions</span>
+          {datasets.length > 0 && (
+            <div className={styles.controlsRow}>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="dataset-filter" className={styles.labels}>Dataset</label>
+                <select
+                  id="dataset-filter"
+                  className={styles.inputs}
+                  value={selectedDataset}
+                  onChange={(e) => setSelectedDataset(e.target.value)}
+                >
+                  {datasets.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {datasets.length > 0 && (
-          <div className="mt-4">
-            <label htmlFor="dataset-filter" className="block text-sm font-medium text-gray-700 mb-1">Dataset</label>
-            <select
-              id="dataset-filter"
-              className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              value={selectedDataset}
-              onChange={(e) => setSelectedDataset(e.target.value)}
-            >
-              {datasets.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         {isLoading ? (
-          <div className="flex justify-center py-12"><Dots /></div>
+          <div className={styles.loadingInline}>
+            <span className={styles.spinner} />
+            <span className={styles.loadingText}>Carregando submissões...</span>
+          </div>
         ) : visibleRequests.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {visibleRequests.map((request: any) => {
+          <div className={styles.list}>
+            {visibleRequests.map((request: any, index: number) => {
               const isDone = String(request['status']).toUpperCase() === 'DONE'
               const repoUrl: string = request['repo_url'] || ''
               const parts = repoUrl.split('/').filter(Boolean)
@@ -131,49 +134,46 @@ const SubmissionsPage = () => {
               const owner = parts[parts.length - 2]
 
               return (
-                <li key={request.id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <RequestListItem
-                      name={request['name']}
-                      email={request['email']}
-                      url={repoUrl}
-                      status={request['status']}
-                      action={
-                        isDone && selectedDataset && owner && repo ? (
-                          datasetRepoCount >= 10 ? (
-                            <a
-                              href={`/dashboard/datasets/${encodeURIComponent(String(selectedDataset))}/analyze/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}?near=10`}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700"
-                            >
-                              View Metrics
-                            </a>
-                          ) : (
-                            <button
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white cursor-not-allowed opacity-50"
-                              title={`Dataset very small (${datasetRepoCount}/10). Add more repos to view metrics.`}
-                              disabled
-                            >
-                              View Metrics
-                            </button>
-                          )
-                        ) : null
-                      }
-                    />
-                  </div>
-                </li>
+                <Reveal key={request.id} delay={Math.min(index, 8) * 40}>
+                  <RequestListItem
+                    name={request['name']}
+                    email={request['email']}
+                    url={repoUrl}
+                    status={request['status']}
+                    action={
+                      isDone && selectedDataset && owner && repo ? (
+                        datasetRepoCount >= 10 ? (
+                          <a
+                            href={`/dashboard/datasets/${encodeURIComponent(String(selectedDataset))}/analyze/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}?near=10`}
+                            className={styles.viewMetricsButton}
+                          >
+                            Ver métricas
+                          </a>
+                        ) : (
+                          <span
+                            className={styles.viewMetricsDisabled}
+                            title={`Dataset muito pequeno (${datasetRepoCount}/10). Adicione mais repositórios para ver as métricas.`}
+                          >
+                            Ver métricas
+                          </span>
+                        )
+                      ) : null
+                    }
+                  />
+                </Reveal>
               )
             })}
-          </ul>
+          </div>
         ) : (
-          <div className="text-center py-12">
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No submissions found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              You haven't submitted any repositories for analysis yet.
-            </p>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyTitle}>Nenhuma submissão encontrada</div>
+            <div className={styles.emptyDescription}>
+              Você ainda não enviou nenhum repositório para análise.
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 

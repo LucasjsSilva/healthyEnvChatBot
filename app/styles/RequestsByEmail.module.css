@@ -1,27 +1,492 @@
-.requestByEmail {
+/* ─── Submit / Submissions pages ─────────────────────────────── */
+.container {
   margin-left: auto;
   margin-right: auto;
   max-width: 1280px;
-  padding: 16px;
-}
-
-.info {
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  color: #111111;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 6px;
-  margin-bottom: 14px;
+  gap: 4px;
+}
+
+.infoTop {
+  background-color: var(--color-surface, #fff);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: var(--shadow-card, 0 1px 3px rgb(0 0 0 / 5%));
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infoTop {
+    animation: none;
+  }
 }
 
 .title {
-  font-size: 28px;
-  font-weight: bold;
-  padding-bottom: 5px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+  padding-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 20px;
-  padding-bottom: 5px;
+  font-size: 17px;
+  color: var(--color-text-secondary, #475569);
+  font-weight: 500;
+  padding-bottom: 4px;
+}
+
+.description {
+  font-size: 14px;
+  color: var(--color-text-muted, #64748b);
+  line-height: 1.7;
+  padding-bottom: 4px;
+  max-width: 760px;
+}
+
+/* ─── Controls row (dataset picker / search / dataset filter) ──── */
+.controlsRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 260px;
+}
+
+.searchGroup {
+  max-width: 420px;
+}
+
+.labels {
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #475569);
+}
+
+.inputs {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+
+.inputs:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  background: #fff;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: var(--color-text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  background: #fff;
+}
+
+.newDatasetButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+  background-color: var(--color-surface-raised, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
+  padding: 9px 14px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text-secondary, #475569);
+  white-space: nowrap;
+}
+
+.newDatasetButton:hover {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+/* ─── Notice banner ──────────────────────────────────────────── */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+}
+
+.success {
+  background: var(--color-ok-bg, #dcfce7);
+  color: #166534;
+  border-color: rgb(22 163 74 / 25%);
+}
+
+.error {
+  background: var(--color-bad-bg, #fee2e2);
+  color: #991b1b;
+  border-color: rgb(220 38 38 / 25%);
+}
+
+/* ─── Repo / submission list ─────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.repoCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: var(--radius-md, 10px);
+  background-color: var(--color-surface, #fff);
+  padding: 14px 20px;
+  margin: 4px 0;
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: var(--shadow-card, 0 1px 3px rgb(0 0 0 / 5%));
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.repoCard:hover {
+  box-shadow: var(--shadow-card-hover, 0 4px 16px rgb(0 0 0 / 10%));
+  border-color: #bfdbfe;
+}
+
+.repoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.repoName {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text, #0f172a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repoDescription {
+  font-size: 13px;
+  color: var(--color-text-muted, #64748b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.submitButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  background-color: var(--color-primary, #2563eb);
+  color: #ffffff;
+  border-radius: var(--radius-full, 9999px);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 25%);
+  white-space: nowrap;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgb(37 99 235 / 30%);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.viewMetricsButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  background-color: var(--color-primary, #2563eb);
+  color: #ffffff;
+  border-radius: var(--radius-full, 9999px);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 25%);
+  white-space: nowrap;
+}
+
+.viewMetricsButton:hover {
+  background-color: var(--color-primary-dark, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgb(37 99 235 / 30%);
+}
+
+.viewMetricsDisabled {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-raised, #f1f5f9);
+  color: var(--color-text-muted, #94a3b8);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-full, 9999px);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: not-allowed;
+  white-space: nowrap;
+}
+
+/* ─── Empty state ────────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text, #0f172a);
+  margin-bottom: 4px;
+}
+
+.emptyDescription {
+  font-size: 13px;
+  color: var(--color-text-muted, #64748b);
+}
+
+/* ─── Loading (inline, dataset dropdown / small spinners) ───────── */
+.loadingInline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  justify-content: center;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-border, #e2e8f0);
+  border-top-color: var(--color-primary, #2563eb);
+  animation: spin 0.8s linear infinite;
+}
+
+.loadingText {
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+/* ─── Create dataset modal ───────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-card-hover, 0 12px 48px rgb(0 0 0 / 16%));
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalInput,
+.modalTextarea {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.modalInput:focus,
+.modalTextarea:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  background: #fff;
+}
+
+.modalTextarea {
+  resize: vertical;
+}
+
+.modalActions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.modalPrimaryButton {
+  padding: 9px 18px;
+  border-radius: var(--radius-full, 9999px);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--color-primary, #2563eb);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.modalPrimaryButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark, #1d4ed8);
+}
+
+.modalPrimaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modalSecondaryButton {
+  padding: 9px 18px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #475569);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.modalSecondaryButton:hover:not(:disabled) {
+  background-color: var(--color-surface-raised, #f1f5f9);
+}
+
+@media screen and (max-width: 800px) {
+  .controlsRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fieldGroup,
+  .searchGroup {
+    max-width: 100%;
+  }
+
+  .repoCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
 }
