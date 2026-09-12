@@ -1,11 +1,13 @@
 import styles from '../styles/RequestListItem.module.css'
 import Divider from './Divider';
+import { ReactNode } from 'react';
 
 interface RequestListItemProps {
   name: string
   email: string
   url: string
   status: string
+  action?: ReactNode
 }
 
 const translateStatus = (status: string) => {
@@ -34,6 +36,7 @@ const RequestListItem = (props: RequestListItemProps) => {
           <span className={styles.url}>{props.url.split('/')[props.url.split('/').length - 1]}</span>
         </div>
         <div className={styles.status}>{translateStatus(props.status)}</div>
+        {props.action}
       </div>
       {/* <Divider /> */}
     </>
