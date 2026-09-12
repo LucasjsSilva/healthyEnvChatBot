@@ -1,10 +1,11 @@
 import dynamic from 'next/dynamic';
 import PlotLoadingIndicator from './PlotLoadingIndicator';
-import useWindowDimensions from "../utils/useWindowDimensions"
 
 const Plot = dynamic(() => import('react-plotly.js'), {
   ssr: false,
-  loading: () => <PlotLoadingIndicator width={600} height={300} />,
+  // 300px em vez de 600 — este gráfico agora divide espaço com "Resumo da
+  // análise" numa coluna, então a largura de espera precisa caber nela.
+  loading: () => <PlotLoadingIndicator width={300} height={300} />,
 })
 
 interface NearReposPlotProps {
@@ -13,12 +14,10 @@ interface NearReposPlotProps {
 }
 
 const NearReposPlot = (props: NearReposPlotProps) => {
-  const { width } = useWindowDimensions()
-
-  let safeWidth = width - 17 > 1280 ? 1280 - 72 : width - 17 - 72;
-
   return (
     <Plot
+      useResizeHandler
+      style={{ width: '100%', height: '300px' }}
       data={[
         {
           x: props.referenceReposInfo.map((repo) => { if (!repo['near']) return repo['x'] }),
@@ -52,7 +51,7 @@ const NearReposPlot = (props: NearReposPlotProps) => {
         },
       ]}
       layout={{
-        width: safeWidth,
+        autosize: true,
         height: 300,
         title: 'Repositórios próximos ao selecionado',
         xaxis: {
