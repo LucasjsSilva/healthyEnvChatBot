@@ -6,6 +6,7 @@ import Reveal from '../../../components/Reveal'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
 import Header from '../../../components/Header'
+import Footer from '../../../components/Footer'
 import styles from '../../../styles/RequestsByEmail.module.css'
 
 const SubmissionsPage = () => {
@@ -173,6 +174,7 @@ const SubmissionsPage = () => {
           </div>
         )}
       </div>
+      <Footer />
     </>
   )
 }

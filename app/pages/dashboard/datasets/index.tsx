@@ -7,6 +7,7 @@ import Reveal from '../../../components/Reveal'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
 import Header from '../../../components/Header'
+import Footer from '../../../components/Footer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
@@ -132,6 +133,7 @@ const Datasets = () => {
           : <SkeletonRepoList count={6} />
         }
       </div>
+      <Footer />
     </>
   )
 }

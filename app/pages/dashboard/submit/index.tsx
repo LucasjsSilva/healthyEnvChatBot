@@ -4,6 +4,7 @@ import axios from 'axios'
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
 import Header from '../../../components/Header'
+import Footer from '../../../components/Footer'
 import Reveal from '../../../components/Reveal'
 import SkeletonRepoList from '../../../components/SkeletonRepoList'
 import styles from '../../../styles/RequestsByEmail.module.css'
@@ -180,6 +181,7 @@ const SubmitRepositoryPage = () => {
           <span className={styles.spinner} />
           <span className={styles.loadingText}>Carregando...</span>
         </div>
+        <Footer />
       </>
     )
   }
@@ -334,6 +336,7 @@ const SubmitRepositoryPage = () => {
           </div>
         </div>
       )}
+      <Footer />
     </>
   )
 }
