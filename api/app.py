@@ -83,9 +83,35 @@ def dataset_repos(dataset_id):
     return ErrorResponses.non_existent_dataset
 
 
-# Route to get all available datasets
-@app.route('/datasets')
+# Route to get all available datasets, or create a new one
+@app.route('/datasets', methods=['GET', 'POST'])
 def datasets():
+  if request.method == 'POST':
+    data = request.get_json(force=True)
+    name = (data.get('name') or '').strip()
+    if not name:
+      return ErrorResponses.missing_dataset_name
+
+    dataset_id = generate(size=10)
+    dataset = DatasetModel(
+      dataset_id,
+      name,
+      data.get('description', ''),
+      0,
+      data.get('author', ''),
+    )
+    dataset.create_dataset()
+
+    return Response(
+      json.dumps({
+        'id': dataset.id,
+        'name': dataset.name,
+        'description': dataset.description,
+        'repo_count': dataset.repo_count,
+        'author': dataset.author,
+      }, indent=2),
+      status=201, mimetype='application/json')
+
   return Response(
     json.dumps(DatasetModel.get_all_datasets_json(), indent=2),
     status=200, mimetype='application/json')
