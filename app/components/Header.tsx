@@ -16,7 +16,7 @@ interface UserInfo {
 
 const NAV_ITEMS = [
   { href: '/dashboard/datasets', label: 'Analisar repositório' },
-  { href: '/dashboard/requests', label: 'Enviar repositório' },
+  { href: '/dashboard/submit', label: 'Enviar repositório' },
   { href: '/about', label: 'Sobre' },
 ]
 
@@ -68,7 +68,7 @@ const Header = () => {
         <div className={styles.sidenavAuth}>
           {userInfo ? (
             <>
-              <a className={styles.navLink} onClick={() => Router.push(`/dashboard/requests/${userInfo.email}`)}>
+              <a className={styles.navLink} onClick={() => Router.push('/dashboard/submissions')}>
                 Minhas submissões
               </a>
               <a className={styles.navLink} onClick={logout}>

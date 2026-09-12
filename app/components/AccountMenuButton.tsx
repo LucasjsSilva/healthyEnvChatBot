@@ -18,7 +18,7 @@ const AccountMenuButton = (props: AccountMenuButtonProps) => {
   const popupClassName = showPopup ? `${styles.popuptext} ${styles.show}` : styles.popuptext
 
   function toSubmissions() {
-    Router.push(`/dashboard/requests/${props.userEmail}`)
+    Router.push('/dashboard/submissions')
   }
 
   return (
