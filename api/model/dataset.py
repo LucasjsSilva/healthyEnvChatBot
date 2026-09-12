@@ -18,6 +18,11 @@ class DatasetModel(db.Model):
     self.author = author
 
 
+  def create_dataset(self):
+    db.session.add(self)
+    db.session.commit()
+
+
   def json(self):
     return {
       self.id: {

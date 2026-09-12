@@ -25,8 +25,15 @@ class ErrorResponses:
 
   missing_info = Response(
     json.dumps({
-      'message': 'Bad request - missing information', 
+      'message': 'Bad request - missing information',
       'description': "The body must provide 'name', 'email' and 'repo_url' values."
+    }, indent=2), status=400, mimetype='application/json'
+  )
+
+  missing_dataset_name = Response(
+    json.dumps({
+      'message': 'Bad request - missing information',
+      'description': "The body must provide a 'name' value."
     }, indent=2), status=400, mimetype='application/json'
   )
 
