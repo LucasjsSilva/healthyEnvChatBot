@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import styles from '../styles/ChatBot.module.css'
 import Constants from '../utils/constants'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faComments, faXmark, faTrash, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -111,7 +113,7 @@ export default function ChatBot({ repoContext }: ChatBotProps) {
         aria-label={open ? 'Fechar assistente' : 'Abrir assistente'}
         title={open ? 'Fechar assistente' : 'Perguntar ao assistente'}
       >
-        {open ? '✕' : '💬'}
+        <FontAwesomeIcon icon={open ? faXmark : faComments} />
       </button>
 
       {/* Chat panel */}
@@ -125,7 +127,7 @@ export default function ChatBot({ repoContext }: ChatBotProps) {
               onClick={clearHistory}
               title="Limpar conversa"
             >
-              🗑
+              <FontAwesomeIcon icon={faTrash} />
             </button>
           </div>
 
@@ -171,7 +173,7 @@ export default function ChatBot({ repoContext }: ChatBotProps) {
               disabled={loading || !input.trim()}
               aria-label="Enviar"
             >
-              ➤
+              <FontAwesomeIcon icon={faPaperPlane} />
             </button>
           </div>
         </div>
