@@ -51,7 +51,7 @@ const NearReposPlot = (props: NearReposPlotProps) => {
       layout={{
         width: safeWidth,
         height: 300,
-        title: 'Repositories next to the selected one',
+        title: 'Repositórios próximos ao selecionado',
         xaxis: {
           showticklabels: false,
         },
@@ -59,8 +59,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           showticklabels: false,
         },
         font: {
-          family: 'Lato, sans-serif',
-          color: '#111111'
+          family: 'Inter, sans-serif',
+          color: '#0f172a'
         },
         plot_bgcolor: '#ffffff',
         paper_bgcolor: '#ffffff',

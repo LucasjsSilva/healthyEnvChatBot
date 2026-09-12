@@ -1,6 +1,5 @@
 import { useState } from "react";
 import styles from '../styles/ChangeNModal.module.css'
-import "react-activity/dist/Dots.css";
 import Link from "next/link";
 
 interface ChangeNModalProps {
@@ -20,13 +19,13 @@ const ChangeNModal = (props: ChangeNModalProps) => {
     <div className={styles.changeNModal}>
       <div className={styles.popupContent}>
         <div className={styles.header}>
-          <span className={styles.title}>Change similar amount</span>
-          <span>Set a quantity for obtaining similar projects to do the analysis:</span>
-        </div>
-        <div className={styles.buttonContainer}>
-          <button className={styles.closeButton} onClick={() => props.closeModal()}>
-            Cancel
-          </button>
+          <div className={styles.buttonContainer}>
+            <button className={styles.closeButton} onClick={() => props.closeModal()}>
+              Cancelar
+            </button>
+          </div>
+          <span className={styles.title}>Alterar quantidade de similares</span>
+          <span className={styles.subtitle}>Defina quantos projetos semelhantes usar na análise:</span>
         </div>
         <div style={{
           display: 'flex',
@@ -54,7 +53,7 @@ const ChangeNModal = (props: ChangeNModalProps) => {
             props.refreshAnalysis(props.datasetId, props.userName, props.repoName, nValue)
           }}>
             <Link href={`/dashboard/datasets/${props.datasetId}/analyze/${props.userName}/${props.repoName}?near=${nValue}`}>
-              <a>Confirm</a>
+              <a>Confirmar</a>
             </Link>
           </div>
         </div>

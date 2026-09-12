@@ -22,6 +22,7 @@ interface MetricPlotProps {
   title: string
   width: number
   situation: MetricSituation
+  isUpper: boolean
 }
 
 const MetricPlot = (props: MetricPlotProps) => {
@@ -50,10 +51,12 @@ const MetricPlot = (props: MetricPlotProps) => {
     const absPct = Math.abs(pct).toFixed(0)
     if (pct > 0) {
       diffLabel = `+${absPct}% acima da mediana`
-      diffPositive = true
+      // Being above the median is only "good" for metrics where higher is better.
+      diffPositive = props.isUpper
     } else if (pct < 0) {
       diffLabel = `${absPct}% abaixo da mediana`
-      diffPositive = false
+      // Being below the median is "good" precisely when higher is NOT better.
+      diffPositive = !props.isUpper
     } else {
       diffLabel = 'igual à mediana'
       diffPositive = null
@@ -88,7 +91,7 @@ const MetricPlot = (props: MetricPlotProps) => {
           width: props.width - 10,
           height: 500,
           title: props.title,
-          font: { family: 'Lato, sans-serif', color: '#111111' },
+          font: { family: 'Inter, sans-serif', color: '#0f172a' },
           plot_bgcolor: getColor(props.situation),
           paper_bgcolor: getColor(props.situation),
           yaxis: { type: 'log', autorange: true, showgrid: false, zeroline: true },
@@ -104,11 +107,8 @@ const MetricPlot = (props: MetricPlotProps) => {
               className={styles.diffBadge}
               style={{
                 background:
-                  diffPositive === true ? '#bbf7d0' :
-                  diffPositive === false ? '#fecaca' : '#e5e7eb',
-                color:
-                  diffPositive === true ? '#166534' :
-                  diffPositive === false ? '#991b1b' : '#374151',
+                  diffPositive === true ? '#16a34a' :
+                  diffPositive === false ? '#dc2626' : '#64748b',
               }}
             >
               {diffLabel}

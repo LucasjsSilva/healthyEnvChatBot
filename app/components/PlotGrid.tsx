@@ -30,6 +30,7 @@ const PlotGrid: FC<{ data: PlotGridProps; insight?: string; insightLoading?: boo
           title={metric['name']}
           width={plotWidth}
           situation={metric['situation']}
+          isUpper={metric['is_upper']}
         />
       )
     });

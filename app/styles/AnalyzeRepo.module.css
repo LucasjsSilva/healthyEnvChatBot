@@ -174,59 +174,42 @@
 @media screen and (max-width: 800px) {
   .sectionHeader {
     flex-direction: column;
+    align-items: flex-start;
   }
 }
 
-
-.section-title {
-  font-size: 26px;
-  font-weight: bold;
-  /* padding-top: 28px; */
-  padding-bottom: 10px;
-}
-
-.request-details {
-  border: 1px solid #969696;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-}
-
-.request-method {
-  padding: 4px;
-  margin-right: 16px;
-  background-color: #CCCCCC;
-  border-radius: 5px;
-}
-
-.request-url {
-  color: #222222;
-  word-wrap: break-word;
-}
-
-.body-title {
-  font-size: 18px;
-  color: #111111;
-  font-weight: bold;
-  padding-bottom: 10px;
-}
-
-.response-body-container {
+/* ─── Loading state ──────────────────────────────────────────── */
+.loadingContainer {
   display: flex;
   flex-direction: column;
-  border: 1px solid #999999;
-  padding: 10px;
-  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 70vh;
 }
 
-.nearHint {
-  margin-top: 10px;
-  font-size: 18px;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-border, #e2e8f0);
+  border-top-color: var(--color-primary, #2563eb);
+  animation: spin 0.8s linear infinite;
 }
 
-@media screen and (max-width: 800px){
-  .sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
+.loadingText {
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
   }
 }
