@@ -15,7 +15,8 @@ const Footer = () => {
             Avaliação da saúde de repositórios de software open source.
           </span>
         </div>
-        <div className={styles.linksColumn}>
+        <div className={styles.linksGroup}>
+          <span className={styles.linksGroupTitle}>Produto</span>
           <Link href='/dashboard/datasets'>
             <a className={styles.link}>Datasets</a>
           </Link>
@@ -31,6 +32,18 @@ const Footer = () => {
             <FontAwesomeIcon icon={faGithub} className={styles.linkIcon} />
             GitHub
           </a>
+        </div>
+        <div className={styles.linksGroup}>
+          <span className={styles.linksGroupTitle}>Recursos</span>
+          <Link href='/how-it-works'>
+            <a className={styles.link}>Como funciona</a>
+          </Link>
+          <Link href='/docs'>
+            <a className={styles.link}>Conceitos</a>
+          </Link>
+          <Link href='/api-docs'>
+            <a className={styles.link}>API</a>
+          </Link>
         </div>
       </div>
       <div className={styles.bottomBar}>
