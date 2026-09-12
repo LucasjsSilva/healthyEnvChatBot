@@ -6,14 +6,16 @@ Embeddings: free local model via sentence-transformers (no OpenAI needed).
 LLM: Groq (free) or OpenAI — controlled by LLM_PROVIDER env var.
 """
 
+import json
 import os
 import shutil
 from typing import List
 
 from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
@@ -26,6 +28,9 @@ KB_PATH = os.path.join(os.path.dirname(__file__), "knowledge_base", "metrics_kno
 
 # FAISS index persistence path
 FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "faiss_index")
+
+# File that tracks which repo IDs have already been indexed (avoids duplicates)
+INDEXED_REPOS_PATH = os.path.join(FAISS_INDEX_PATH, "indexed_repos.json")
 
 QA_PROMPT = ChatPromptTemplate.from_messages([
     ("system",
@@ -82,8 +87,8 @@ def _build_vectorstore() -> FAISS:
 def _build_llm() -> BaseChatModel:
     """
     Returns the LLM based on LLM_PROVIDER env var.
-    - 'groq'   -> ChatGroq (free tier, llama-3.3-70b) — needs GROQ_API_KEY
-    - 'openai' -> ChatOpenAI                          — needs OPENAI_API_KEY
+    - 'groq'   -> ChatGroq (free tier) — needs GROQ_API_KEY, model via GROQ_MODEL
+    - 'openai' -> ChatOpenAI           — needs OPENAI_API_KEY
     """
     provider = os.environ.get("LLM_PROVIDER", "groq").lower()
     if provider == "groq":
@@ -91,7 +96,9 @@ def _build_llm() -> BaseChatModel:
         groq_key = os.environ.get("GROQ_API_KEY", "")
         if not groq_key:
             raise ValueError("GROQ_API_KEY not configured")
-        return ChatGroq(model="llama-3.3-70b-versatile", temperature=0.2, api_key=groq_key)
+        # llama models are no longer available on Groq for all accounts; default to a widely available model
+        groq_model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+        return ChatGroq(model=groq_model, temperature=0.2, api_key=groq_key)
     # OpenAI fallback
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if not openai_key:
@@ -123,6 +130,93 @@ def rebuild_index() -> None:
     if os.path.exists(FAISS_INDEX_PATH):
         shutil.rmtree(FAISS_INDEX_PATH)
     _build_vectorstore()
+
+
+# ─── Repo document indexing (RAG learns from real repos) ──────────────────────
+
+_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=800,
+    chunk_overlap=100,
+    separators=["\n\n", "\n", " "],
+)
+
+
+def _load_indexed_repo_ids() -> set:
+    """Returns the set of repo IDs already present in the FAISS index."""
+    if os.path.exists(INDEXED_REPOS_PATH):
+        try:
+            with open(INDEXED_REPOS_PATH, encoding="utf-8") as f:
+                return set(json.load(f))
+        except Exception:
+            pass
+    return set()
+
+
+def _save_indexed_repo_ids(ids: set) -> None:
+    os.makedirs(FAISS_INDEX_PATH, exist_ok=True)
+    with open(INDEXED_REPOS_PATH, "w", encoding="utf-8") as f:
+        json.dump(sorted(ids), f)
+
+
+def add_repo_document(repo_id: str, text: str) -> None:
+    """
+    Adds a single repository document to the FAISS index.
+    Safe to call multiple times for the same repo_id — duplicates are skipped.
+    """
+    indexed = _load_indexed_repo_ids()
+    if repo_id in indexed:
+        return
+
+    docs = _splitter.split_documents([Document(page_content=text, metadata={"repo_id": repo_id})])
+    vectorstore = _build_vectorstore()
+    vectorstore.add_documents(docs)
+    vectorstore.save_local(FAISS_INDEX_PATH)
+
+    indexed.add(repo_id)
+    _save_indexed_repo_ids(indexed)
+
+    # Invalidate the cached chain so the next request uses the updated index
+    from chatbot import session_manager as _sm
+    with _sm._lock:
+        _sm._chain = None
+
+
+def index_repos_from_db(repos_data: List[dict]) -> None:
+    """
+    Bulk-indexes repositories from the DB that have not been indexed yet.
+
+    Each item in repos_data must have:
+      - "id":   unique repo identifier
+      - "text": pre-formatted text document for the repo
+    """
+    indexed = _load_indexed_repo_ids()
+    new_docs: List[Document] = []
+    new_ids: List[str] = []
+
+    for repo in repos_data:
+        if repo["id"] not in indexed:
+            docs = _splitter.split_documents(
+                [Document(page_content=repo["text"], metadata={"repo_id": repo["id"]})]
+            )
+            new_docs.extend(docs)
+            new_ids.append(repo["id"])
+
+    if not new_docs:
+        return
+
+    vectorstore = _build_vectorstore()
+    vectorstore.add_documents(new_docs)
+    vectorstore.save_local(FAISS_INDEX_PATH)
+
+    indexed.update(new_ids)
+    _save_indexed_repo_ids(indexed)
+
+    # Invalidate cached chain
+    from chatbot import session_manager as _sm
+    with _sm._lock:
+        _sm._chain = None
+
+    print(f"[rag_chain] Indexed {len(new_ids)} new repo(s) into FAISS.")
 
 
 def messages_to_history(messages: List[dict]) -> List[BaseMessage]:

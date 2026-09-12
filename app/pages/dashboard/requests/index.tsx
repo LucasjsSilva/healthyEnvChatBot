@@ -2,7 +2,6 @@ import axios from "axios";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import DashboardHeader from "../../../components/DashboardHeader";
 import Header from "../../../components/Header";
 import styles from '../../../styles/Request.module.css'
 import Constants from "../../../utils/constants";
@@ -26,7 +25,7 @@ const Requests = () => {
   async function loadRepositories() {
     if (typeof window === "undefined") return
     try {
-      const raw = localStorage.getItem('userData')
+      const raw = sessionStorage.getItem('userData')
       if (!raw) {
         setLoadError('Usuário não autenticado. Faça login novamente.')
         return
@@ -71,7 +70,7 @@ const Requests = () => {
   }, [])
 
   function verifyAuth() {
-    const data = JSON.parse(localStorage.getItem('userData'))
+    const data = JSON.parse(sessionStorage.getItem('userData'))
 
     if (data == undefined) {
       Router.push(`/auth?next=${router.asPath}`)
@@ -147,7 +146,7 @@ const Requests = () => {
       <Head>
         <title>HealthyEnv - Solicitar inclusão de repositório</title>
       </Head>
-      <DashboardHeader selectedIndex={2} />
+      <Header />
       <div className="bg-[#f0f1f3] h-full p-[16px] w-[1280px] ml-auto mr-auto">
         <div className="flex flex-col px-4 pt-6 pb-4 mb-4 bg-white rounded-md">
           <span className="mb-3 text-3xl font-bold">Repository submission</span>

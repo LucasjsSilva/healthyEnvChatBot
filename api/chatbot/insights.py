@@ -5,6 +5,9 @@ of a repository's metrics, a cluster comparison, and final recommendations.
 Uses the same LLM configured for the RAG chatbot (Groq / OpenAI).
 """
 
+import json
+import re
+
 from chatbot.rag_chain import _build_llm
 
 _llm = None
@@ -17,30 +20,48 @@ def _get_llm():
     return _llm
 
 
-def _call_llm(prompt: str) -> str:
-    response = _get_llm().invoke(prompt)
+def _call_llm(prompt: str, json_mode: bool = False, max_tokens: int | None = None) -> str:
+    llm = _get_llm()
+    bind_kwargs: dict = {}
+    if json_mode:
+        # Ask the provider to enforce valid JSON output rather than relying
+        # on the model following a plain-text instruction — much more
+        # reliable for the batched multi-category response.
+        bind_kwargs["response_format"] = {"type": "json_object"}
+    if max_tokens is not None:
+        bind_kwargs["max_tokens"] = max_tokens
+    if bind_kwargs:
+        llm = llm.bind(**bind_kwargs)
+    response = llm.invoke(prompt)
     return response.content if hasattr(response, "content") else str(response)
 
 
 # ─── Prompt templates ────────────────────────────────────────────────────────
 
-_CATEGORY_PROMPT = """\
+# Generates the interpretation for every metric category in a single LLM call
+# (instead of one call per category) to stay well within Groq's free-tier
+# tokens-per-minute rate limit — see the /insights root-cause investigation.
+_CATEGORIES_BATCH_PROMPT = """\
 Você é um especialista em saúde de repositórios GitHub que explica métricas \
 para usuários NÃO técnicos.
 
 Repositório: {repo_name}
-Categoria analisada: {category_name}
 
-Métricas coletadas (comparadas com repositórios similares do mesmo dataset):
-{metrics_text}
+Abaixo estão várias categorias de métricas coletadas (comparadas com \
+repositórios similares do mesmo dataset):
 
-Escreva UM parágrafo (3 a 5 frases) em português do Brasil, com linguagem \
-clara e acessível, que:
+{categories_text}
+
+Para CADA categoria acima, escreva um parágrafo (3 a 5 frases) em português \
+do Brasil, com linguagem clara e acessível, que:
 1. Descreva o que as métricas desta categoria revelam sobre o repositório.
 2. Destaque o que está bem ou preocupante com base nos valores e situações.
 3. Sugira uma ação concreta caso haja algo a melhorar.
 
-Responda APENAS com o parágrafo — sem título, sem marcadores, sem formatação extra.\
+Responda APENAS com um objeto JSON válido (sem markdown, sem texto antes ou \
+depois), usando exatamente estes IDs de categoria como chaves: {category_ids}
+
+Formato: {{"<id_da_categoria>": "<parágrafo>", ...}}\
 """
 
 _CLUSTER_PROMPT = """\
@@ -86,6 +107,55 @@ _SITUATION_LABELS = {
 }
 
 
+def _extract_json_object(text: str) -> str:
+    """Strips markdown code fences / stray text some models wrap JSON in."""
+    match = re.search(r"\{.*\}", text.strip(), re.DOTALL)
+    return match.group(0) if match else text
+
+
+def _generate_category_insights_batch(
+    repo_name: str, category_ids: list[str], category_blocks: list[str]
+) -> dict:
+    """
+    Generates the per-category interpretation text for every category in a
+    single LLM call (instead of one call per category), since Groq's free
+    tier rate-limits by tokens-per-minute rather than request count — nine
+    sequential calls per analysis was enough to trigger repeated 429 retries.
+    """
+    if not category_ids:
+        return {}
+
+    prompt = _CATEGORIES_BATCH_PROMPT.format(
+        repo_name=repo_name,
+        categories_text="\n\n".join(category_blocks),
+        category_ids=", ".join(category_ids),
+    )
+
+    fallback_text = "Não foi possível gerar uma interpretação para esta categoria no momento."
+    category_insights: dict = {}
+    raw = None
+    try:
+        # Generous ceiling: each category needs a paragraph (~150-250 tokens)
+        # plus JSON overhead — leave enough room that the response is never
+        # truncated mid-document, whatever the category count.
+        raw = _call_llm(prompt, json_mode=True, max_tokens=600 * max(len(category_ids), 1) + 500)
+        parsed = json.loads(_extract_json_object(raw))
+        for cid in category_ids:
+            value = parsed.get(cid)
+            category_insights[cid] = value if isinstance(value, str) and value.strip() else fallback_text
+    except Exception as e:
+        # Malformed JSON, unexpected LLM output, or the call itself failed —
+        # degrade gracefully instead of failing the whole /insights request,
+        # but log loudly so the failure is diagnosable.
+        print(f'[insights] category batch failed: {type(e).__name__}: {e}')
+        if raw is not None:
+            print(f'[insights] raw LLM output (first 2000 chars):\n{raw[:2000]}')
+        for cid in category_ids:
+            category_insights[cid] = fallback_text
+
+    return category_insights
+
+
 # ─── Public function ──────────────────────────────────────────────────────────
 
 def generate_insights(repo: dict, metrics_by_category: list, cluster: dict) -> dict:
@@ -103,14 +173,16 @@ def generate_insights(repo: dict, metrics_by_category: list, cluster: dict) -> d
     """
     repo_name = repo.get("name", "repositório")
 
-    # ── Per-category insights ─────────────────────────────────────────────────
-    category_insights: dict = {}
+    # ── Per-category insights (batched into a single LLM call) ────────────────
+    category_ids: list[str] = []
+    category_blocks: list[str] = []
     ok_count = 0
     reasonable_count = 0
     bad_count = 0
     bad_metrics_list: list[str] = []
 
     for category in metrics_by_category:
+        category_ids.append(category["id"])
         lines = []
         for m in category["metrics"]:
             situation_label = _SITUATION_LABELS.get(m["situation"], m["situation"])
@@ -140,12 +212,13 @@ def generate_insights(repo: dict, metrics_by_category: list, cluster: dict) -> d
                 bad_count += 1
                 bad_metrics_list.append(f'{m["name"]} (valor: {value_str})')
 
-        prompt = _CATEGORY_PROMPT.format(
-            repo_name=repo_name,
-            category_name=category["working_group"],
-            metrics_text="\n".join(lines),
+        category_blocks.append(
+            f'Categoria "{category["id"]}" — {category["working_group"]}:\n' + "\n".join(lines)
         )
-        category_insights[category["id"]] = _call_llm(prompt)
+
+    category_insights = _generate_category_insights_batch(
+        repo_name, category_ids, category_blocks
+    )
 
     # ── Cluster insight ───────────────────────────────────────────────────────
     similar = cluster.get("similar_repos", [])

@@ -195,6 +195,47 @@ def _collect_metrics(owner, repo_name, headers, gh_token=None):
     }
 
 
+def _format_repo_for_index(owner: str, repo_name: str, data: dict) -> str:
+    """Formats a repository's collected data as plain text for RAG indexing."""
+    m = data['metrics']
+
+    def _fmt(v):
+        try:
+            return f"{float(v):.2f}"
+        except (TypeError, ValueError):
+            return str(v)
+
+    return (
+        f"Repositório: {owner}/{repo_name}\n"
+        f"Linguagem principal: {data['language']}\n"
+        f"Linhas de código (LOC): {data['loc']}\n"
+        f"Estrelas: {data['stars']}\n"
+        f"Forks: {data['forks']}\n"
+        f"Issues abertas: {data['open_issues']}\n"
+        f"Contribuidores únicos: {data['contributors']}\n"
+        f"Total de commits: {data['commits']}\n"
+        "\nMétricas detalhadas:\n"
+        f"- Commits totais: {_fmt(m.get('code_changes_commits', 0))}\n"
+        f"- Linhas adicionadas: {_fmt(m.get('code_changes_lines_added', 0))}\n"
+        f"- Linhas removidas: {_fmt(m.get('code_changes_lines_removed', 0))}\n"
+        f"- Média de linhas por commit: {_fmt(m.get('code_changes_lines_avg_lines_commit', 0))}\n"
+        f"- Média de arquivos por commit: {_fmt(m.get('code_changes_lines_avg_files_commit', 0))}\n"
+        f"- Maior changeset (max_change_set): {_fmt(m.get('max_change_set', 0))}\n"
+        f"- Changeset médio (avg_change_set): {_fmt(m.get('avg_change_set', 0))}\n"
+        f"- Truck factor: {_fmt(m.get('truck_factor', 0))}\n"
+        f"- Experiência do top contribuidor (commits): {_fmt(m.get('avg_highest_contributor_experience', 0))}\n"
+        f"- Issues ativas: {_fmt(m.get('issues_active', 0))}\n"
+        f"- Issues fechadas: {_fmt(m.get('issues_closed', 0))}\n"
+        f"- Idade média das issues (dias): {_fmt(m.get('issues_age_avg', 0))}\n"
+        f"- Idade máxima das issues (dias): {_fmt(m.get('issues_age_max', 0))}\n"
+        f"- Idade mediana das issues (dias): {_fmt(m.get('issues_age_median', 0))}\n"
+        f"- Tempo médio para fechar issue (dias): {_fmt(m.get('avg_time_to_close', 0))}\n"
+        f"- Tempo mediano para fechar issue (dias): {_fmt(m.get('median_time_to_close', 0))}\n"
+        f"- Tempo médio para primeira resposta (dias): {_fmt(m.get('avg_time_to_first_response', 0))}\n"
+        f"- Tempo mediano para primeira resposta (dias): {_fmt(m.get('median_time_to_first_response', 0))}\n"
+    )
+
+
 def _do_process(app, request_id, dataset_id, repo_url, gh_token=None):
     """Background task: fetches GitHub metrics and stores results in the DB."""
     with app.app_context():
@@ -254,6 +295,14 @@ def _do_process(app, request_id, dataset_id, repo_url, gh_token=None):
                 ar.status = AnalysisStatusEnum.DONE
 
             db.session.commit()
+
+            # ── Index repo in FAISS so the RAG chatbot learns from it ──────────
+            try:
+                from chatbot.rag_chain import add_repo_document
+                repo_text = _format_repo_for_index(owner, repo_name, data)
+                add_repo_document(repo_id, repo_text)
+            except Exception as idx_err:
+                print(f'[processor] Warning: could not index repo in RAG: {idx_err}')
 
             print(f'[processor] Done: {owner}/{repo_name}')
 

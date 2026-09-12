@@ -1,15 +1,88 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
 import Link from 'next/link'
+import Router, { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import AccountMenuButton from './AccountMenuButton'
 import styles from '../styles/Header.module.css'
 
-interface SelectedIndex {
-  selectedIndex: number
+interface UserInfo {
+  name: string
+  email: string
+  profilePicture: string
+  timestamp: number
 }
 
-const Header = ({ selectedIndex }: SelectedIndex) => {
+const NAV_ITEMS = [
+  { href: '/dashboard/datasets', label: 'Analisar repositório' },
+  { href: '/dashboard/requests', label: 'Enviar repositório' },
+  { href: '/about', label: 'Sobre' },
+]
+
+const SESSION_TTL_MS = 86400000
+
+const Header = () => {
+  const router = useRouter()
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [showDrawer, setShowDrawer] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = sessionStorage.getItem('userData')
+      if (!raw) return
+      const data = JSON.parse(raw)
+      if (Date.now() - data.timestamp > SESSION_TTL_MS) return
+      setUserInfo(data)
+    } catch (e) { }
+  }, [])
+
+  function logout() {
+    sessionStorage.removeItem('userData')
+    setUserInfo(null)
+    Router.push('/')
+  }
+
+  function isActive(href: string) {
+    return router.pathname === href || router.pathname.startsWith(`${href}/`)
+  }
+
+  const loginHref = `/auth?next=${router.asPath}`
+
   return (
     <div className={styles.header}>
+      <div
+        id='mySidenav'
+        className={styles.sidenav}
+        style={showDrawer ? { minWidth: '280px' } : { minWidth: '0px' }}
+      >
+        <button className={styles.closebtn} onClick={() => setShowDrawer(false)}>&times;</button>
+        {NAV_ITEMS.map((item) => (
+          <Link key={item.href} href={item.href}>
+            <a className={styles.navLink} style={isActive(item.href) ? { color: '#f1f5f9', fontWeight: 700 } : undefined}>
+              {item.label}
+            </a>
+          </Link>
+        ))}
+        <div className={styles.sidenavAuth}>
+          {userInfo ? (
+            <>
+              <a className={styles.navLink} onClick={() => Router.push(`/dashboard/requests/${userInfo.email}`)}>
+                Minhas submissões
+              </a>
+              <a className={styles.navLink} onClick={logout}>
+                Sair
+              </a>
+            </>
+          ) : (
+            <Link href={loginHref}>
+              <a className={styles.navLink}>Entrar</a>
+            </Link>
+          )}
+        </div>
+      </div>
+
       <div style={{
         marginLeft: 'auto',
         marginRight: 'auto',
@@ -23,50 +96,48 @@ const Header = ({ selectedIndex }: SelectedIndex) => {
           display: 'flex',
           alignItems: 'center',
         }}>
+          <div className={styles.drawerButton} onClick={() => setShowDrawer(true)}>
+            <FontAwesomeIcon icon={faBars} />
+          </div>
           <Link href='/'>
             <a>
               <span className={styles.title}>HealthyEnv</span>
             </a>
           </Link>
-          {/* <Link href='/how-it-works'>
-            <a>
-              {selectedIndex == 1
-                ? <span className={styles.link} style={{ color: '#2590DA', fontWeight: 'bold' }}>How it works</span>
-                : <span className={styles.link}>How it works</span>}
-            </a>
-          </Link>
-          <Link href='/api-docs'>
-            <a>
-              {selectedIndex == 2
-                ? <span className={styles.link} style={{ color: '#2590DA', fontWeight: 'bold' }}>API</span>
-                : <span className={styles.link}>API</span>}
-            </a>
-          </Link>
-          <Link href='/docs'>
-            <a>
-              {selectedIndex == 3
-                ? <span className={styles.link} style={{ color: '#2590DA', fontWeight: 'bold' }}>Docs</span>
-                : <span className={styles.link}>Docs</span>}
-            </a>
-          </Link> */}
-          <Link href='/about'>
-            <a>
-              {selectedIndex == 4
-                ? <span className={styles.link} style={{ color: '#2590DA', fontWeight: 'bold' }}>About</span>
-                : <span className={styles.link}>About</span>}
-            </a>
-          </Link>
+          {NAV_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href}>
+              <a>
+                <span className={styles.link} style={isActive(item.href) ? { color: '#f1f5f9', fontWeight: 700 } : undefined}>
+                  {item.label}
+                </span>
+              </a>
+            </Link>
+          ))}
         </div>
         <div className={styles.options}>
-          <Link href='/auth'>
-            <a><span className="px-3 py-1 mr-5 bg-blue-500 rounded-md cursor-pointer"><b>Log in</b></span></a>
-          </Link>
-          <a href='https://github.com/SERG-UFPI/healthyEnv' className={styles.icon}>
+          {userInfo ? (
+            <AccountMenuButton
+              profilePicture={userInfo.profilePicture}
+              userName={userInfo.name}
+              userEmail={userInfo.email}
+              onLogout={logout}
+            />
+          ) : (
+            <Link href={loginHref}>
+              <a><span className={styles.signupButton}>Entrar</span></a>
+            </Link>
+          )}
+          <a
+            href='https://github.com/SERG-UFPI/healthyEnv'
+            className={styles.icon}
+            target='_blank'
+            rel='noreferrer'
+          >
             <FontAwesomeIcon icon={faGithub} />
           </a>
         </div>
       </div>
-    </div >
+    </div>
   )
 }
 

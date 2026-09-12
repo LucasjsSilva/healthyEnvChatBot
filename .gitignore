@@ -1,0 +1,22 @@
+CLAUDE.md
+
+*.md
+
+.env
+
+/docs
+
+# TypeScript incremental build cache (local, regenerated on every build)
+*.tsbuildinfo
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor/IDE settings
+.vscode/
+.idea/
+
+# Claude Code local permission overrides (personal, not shared with the team)
+.claude/settings.local.json
+

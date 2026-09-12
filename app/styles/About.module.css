@@ -1,6 +1,245 @@
-.container {
+/* ─── Hero ──────────────────────────────────────────────────────── */
+.hero {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heroContent {
   margin-left: auto;
   margin-right: auto;
   max-width: 1280px;
-  padding: 16px;
+  padding: 40px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  background: var(--color-primary-light);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.heroTitle {
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.heroDesc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ─── Generic section shell ─────────────────────────────────────── */
+.section {
+  background: var(--color-surface);
+}
+
+.sectionContent {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+  padding: 64px 16px;
+}
+
+.sectionTitle {
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin: 8px 0 40px;
+  line-height: 1.6;
+}
+
+/* ─── Timeline ──────────────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timelineCard {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 24px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.timelineCard:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.timelineCardHighlight {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px var(--color-primary), var(--shadow-card);
+}
+
+.timelineYear {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.timelineCardHighlight .timelineYear {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.timelineHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.timelineName {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.timelineRole {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.timelineCardHighlight .timelineRole {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.timelineDesc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ─── Licenses ──────────────────────────────────────────────────── */
+.licensesSection {
+  background: var(--color-bg);
+}
+
+.licensesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.licenseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.licenseHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.licenseName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.licenseType {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.licenseCopyright {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.licenseBody {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+@media screen and (max-width: 800px) {
+  .timelineCard {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .licensesGrid {
+    grid-template-columns: 1fr;
+  }
 }

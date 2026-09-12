@@ -3,15 +3,13 @@ import Popup from "reactjs-popup"
 import Head from "next/head"
 import Constants from "../../../../../../utils/constants"
 import styles from '../../../../../../styles/AnalyzeRepo.module.css'
-import { Dots } from 'react-activity'
 import Router, { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faArrowRightArrowLeft, faArrowsRotate, faCertificate, faCheck } from "@fortawesome/free-solid-svg-icons"
+import { faArrowRightArrowLeft, faArrowsRotate, faCheck } from "@fortawesome/free-solid-svg-icons"
 import { getFirstQuartile, getMedian, getThirdQuartile } from "../../../../../../functions/stats"
-import "react-activity/dist/Dots.css";
 import PlotGrid from "../../../../../../components/PlotGrid"
-import DashboardHeader from "../../../../../../components/DashboardHeader"
+import Header from "../../../../../../components/Header"
 import RepoInfos from "../../../../../../components/RepoInfos"
 import NearReposPlot from "../../../../../../components/NearReposPlot"
 import MetricsHint from "../../../../../../components/MetricsHint"
@@ -158,11 +156,14 @@ const Repo = () => {
             }
             resultsResponse['repos'].forEach((repo: any) => {
               if (repo.near) {
+                const metricValue = repo.metrics[metric['id']]
                 refMetricsValues.push({
                   name: repo.name,
-                  value: repo.metrics[metric['id']]
+                  value: metricValue
                 })
-                valuesArray.push(repo.metrics[metric['id']])
+                if (metricValue != null && !isNaN(metricValue)) {
+                  valuesArray.push(metricValue)
+                }
               }
             })
 
@@ -176,7 +177,7 @@ const Repo = () => {
               metricSituation = MetricSituation.Ok
               okMetricsCount++
             } else {
-              if (metric['id']['is_upper']) {
+              if (metric['is_upper']) {
                 if (resultsResponse.selected['metrics'][metric['id']] >= firstQuartile) {
                   metricSituation = MetricSituation.Reasonable
                   reasonableMetricsCount++
@@ -236,18 +237,12 @@ const Repo = () => {
       <Head>
         <title>{`HealthyEnv - Análise de ${router.query.repo}`} </title>
       </Head>
-      <DashboardHeader selectedIndex={1} />
+      <Header />
       {
         isLoading
-          ? <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '80vh'
-          }}>
-            <Dots color='#000000' size={18} speed={1} animating={true} />
-            Obtaining results...
+          ? <div className={styles.loadingContainer}>
+            <span className={styles.spinner} />
+            <span className={styles.loadingText}>Obtendo resultados da análise...</span>
           </div>
           : <div className={styles.container}>
             <div className={styles['clustering-summary']}>
@@ -257,7 +252,7 @@ const Repo = () => {
                     {selectedRepoInfo['name']}
                   </span>
                   <div className={styles['repo-type-badge']}>
-                    Added by HealthyEnv
+                    Adicionado pelo HealthyEnv
                     <FontAwesomeIcon icon={faCheck} style={{ marginLeft: 5, height: 'match-content' }} />
                   </div>
                 </div>
@@ -270,37 +265,44 @@ const Repo = () => {
                   contributors={selectedRepoInfo['contributors']}
                   commits={selectedRepoInfo['commits']} />
                 <span className={styles['algorithm-hint']}>
-                  Algorithm used:
+                  Algoritmo utilizado:
                 </span>
                 <span className={styles['algorithm-title']}>
-                  Distance-based similarity
+                  Similaridade por distância
                 </span>
                 <span>
-                  This algorithm searches the dataset for the repositories most
-                  similar to the selected repository, based on their distance
-                  in the plane.
+                  Este algoritmo busca no dataset os repositórios mais semelhantes
+                  ao repositório selecionado, com base na distância entre eles no
+                  plano de métricas.
                 </span>
-                <span className={styles.nearHint}>Obtaining <b>{+router.query.near}</b> similar projects.</span>
+                <span className={styles.nearHint}>Obtendo <b>{+router.query.near}</b> projetos semelhantes.</span>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div className={styles['change-algorithm-button']} onClick={() => setOpen(true)}>
                     <FontAwesomeIcon icon={faArrowRightArrowLeft} />
                     <span className={styles['button-label']}>
-                      Change repository
+                      Trocar repositório
                     </span>
                   </div>
                   <div className={styles['change-algorithm-button']} onClick={() => setOpenN(true)}>
                     <FontAwesomeIcon icon={faArrowsRotate} />
                     <span className={styles['button-label']}>
-                      Change similar amount
+                      Alterar quantidade de similares
                     </span>
                   </div>
                 </div>
               </div>
-              {/* <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} /> */}
             </div>
+
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Distribution</span>
+                <span className={styles['section-title']}>Resumo da análise</span>
+              </div>
+              <AnalysisSummarySection metricsCount={analysisSummary} />
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles['section-title']}>Distribuição</span>
               </div>
               <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
               <InsightCard text={insights?.cluster} loading={insightsLoading} />
@@ -308,7 +310,7 @@ const Repo = () => {
 
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Metrics applied</span>
+                <span className={styles['section-title']}>Métricas aplicadas</span>
                 <MetricsHint />
               </div>
               {
@@ -333,14 +335,14 @@ const Repo = () => {
 
             <div className={styles.section}>
               <div className={styles['section-title']}>
-                <span>Request details</span>
+                <span>Detalhes da requisição</span>
               </div>
               <div className={styles['request-details']}>
                 <span className={styles['request-method']}>GET</span>
                 <span className={styles['request-url']}>{requestPayloads[0].url}</span>
               </div>
               <div className={styles['response-body-container']}>
-                <span className={styles['body-title']}>Response payload</span>
+                <span className={styles['body-title']}>Corpo da resposta</span>
                 <textarea rows={20} value={requestPayloads[0].payload} spellCheck={false} readOnly={true} />
               </div>
             </div>

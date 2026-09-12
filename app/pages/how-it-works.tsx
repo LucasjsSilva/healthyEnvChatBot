@@ -7,7 +7,7 @@ const HowItWorks = () => {
       <Head>
         <title>HealthyEnv - Sobre</title>
       </Head>
-      <Header selectedIndex={1} />
+      <Header />
       <div>
         {'(Landing)'}
         How it works

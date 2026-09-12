@@ -8,7 +8,6 @@ import { Dots } from 'react-activity'
 import "react-activity/dist/Dots.css";
 import Head from 'next/head'
 import Constants from '../../../utils/constants'
-import DashboardHeader from '../../../components/DashboardHeader'
 
 const RequestsByEmail = () => {
   const router = useRouter()
@@ -20,7 +19,7 @@ const RequestsByEmail = () => {
     verifyAuth()
     // If email param is "null", redirect to the correct login-based identifier
     if (router.query.email === 'null') {
-      const raw = localStorage.getItem('userData')
+      const raw = sessionStorage.getItem('userData')
       if (raw) {
         const user = JSON.parse(raw)
         const identifier = user?.email || user?.login
@@ -34,7 +33,7 @@ const RequestsByEmail = () => {
   }, [router.isReady, router.query.email])
 
   function verifyAuth() {
-    const data = JSON.parse(localStorage.getItem('userData'))
+    const data = JSON.parse(sessionStorage.getItem('userData'))
 
     if (data == undefined) {
       Router.push(`/auth?next=${router.asPath}`)
@@ -70,7 +69,7 @@ const RequestsByEmail = () => {
       <Head>
         <title>{`HealthyEnv - Solicitações de ${router.query.email}`}</title>
       </Head>
-      <DashboardHeader selectedIndex={2} />
+      <Header />
       <div className={styles.requestByEmail}>
         <div className={styles.info}>
           <span className={styles.title}>

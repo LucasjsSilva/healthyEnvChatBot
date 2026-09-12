@@ -2,8 +2,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import styles from '../styles/ChangeRepoModal.module.css'
 import RepoListItemSimple from "./RepoListItemSimple";
-import { Dots } from 'react-activity'
-import "react-activity/dist/Dots.css";
 import Constants from "../utils/constants";
 
 interface ChangeRepoModalProps {
@@ -58,20 +56,20 @@ const ChangeRepoModal = (props: ChangeRepoModalProps) => {
     <div className={styles.changeRepoModal}>
       <div className={styles.popupContent}>
         <div className={styles.header}>
-          <span className={styles.title}>Change repository</span>
-          <span>Select a repository to analyze:</span>
-          <input className={styles.input} placeholder='Filter repositories'
+          <div className={styles.buttonContainer}>
+            <button className={styles.closeButton} onClick={() => props.closeModal()}>
+              Cancelar
+            </button>
+          </div>
+          <span className={styles.title}>Trocar repositório</span>
+          <span className={styles.subtitle}>Selecione um repositório para analisar:</span>
+          <input className={styles.input} placeholder='Filtrar repositórios'
             onChange={(e) => {
               setDisplayingRepos(
                 repos.filter((repo) => repo['name'].toLowerCase().includes(e.target.value.toLowerCase()))
               )
             }}
           />
-        </div>
-        <div className={styles.buttonContainer}>
-          <button className={styles.closeButton} onClick={() => props.closeModal()}>
-            Cancel
-          </button>
         </div>
         {!isLoading ? (
           <div className={styles.reposList}>
@@ -88,10 +86,8 @@ const ChangeRepoModal = (props: ChangeRepoModalProps) => {
         ) : (
           <div className={styles.loadingContainer}>
             <div className={styles.loading}>
-              <Dots color='#000000' size={18} speed={1} animating={true} />
-              <span style={{
-                fontSize: 14
-              }}>Loading repositories...</span>
+              <span className={styles.spinner} />
+              <span className={styles.loadingText}>Carregando repositórios...</span>
             </div>
           </div>
         )}

@@ -1,105 +1,192 @@
+/* ─── Datasets page ──────────────────────────────────────────── */
 .container {
   margin-left: auto;
   margin-right: auto;
   max-width: 1280px;
-  padding: 16px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .infoTop {
   background-color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  margin-bottom: 10px;
-  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infoTop {
+    animation: none;
+  }
 }
 
 .title {
-  /* padding-top: 0px; */
-  font-size: 28px;
-  font-weight: bold;
-  color: #111111;
-  padding-bottom: 5px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  padding-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 20px;
-  color: #111111;
-  padding-bottom: 5px;
+  font-size: 17px;
+  color: #475569;
+  font-weight: 500;
+  padding-bottom: 4px;
 }
 
 .description {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.7;
   padding-bottom: 20px;
-}
-
-.loading{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  max-width: 760px;
 }
 
 .repo-list-top {
-  /* padding-top: 10px; */
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  /* padding-bottom: 20px; */
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 20px;
 }
 
-.repo-list-top-title {
-  font-weight: bold;
-  color: #111111;
-  font-size: 22px;
-  padding-bottom: 10px;
-}
-
-.dataset-n {
-  display: flex;
-  flex-direction: row;
-}
-
-.datasetInput {
-  display: none;
-}
-
-.inputs-container {
+.fieldGroup {
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-right: 10px;
+  max-width: 260px;
+}
+
+.searchGroup {
+  max-width: 420px;
 }
 
 .labels {
-  padding-bottom: 5px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #475569);
 }
 
 .inputs {
-  padding: 8px 5px;
-  border: solid;
-  border-color: #D8D8D8;
-  border-width: 1px;
-  border-radius: 4px;
-  max-width: 400px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+
+.inputs:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  background: #fff;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: var(--color-text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+  background: #fff;
+}
+
+/* ─── Inline loading (dataset dropdown) ──────────────────────── */
+.loadingInline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-top-color: var(--color-primary, #2563eb);
+  animation: spin 0.7s linear infinite;
+}
+
+.loadingText {
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
 }
 
 .repo-list {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
-@media screen and (max-width: 800px){
+@media screen and (max-width: 800px) {
   .repo-list-top {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
-  .inputs-container {
-    margin: 6px 0px;
-    padding: 0px;
-    
+  .fieldGroup,
+  .searchGroup {
+    max-width: 100%;
   }
 }
