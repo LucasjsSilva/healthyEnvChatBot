@@ -26,7 +26,7 @@
   border-radius: 16px;
   overflow: hidden;
   background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   box-shadow: 0 4px 24px rgb(0 0 0 / 8%);
   animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
@@ -69,14 +69,14 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.15;
-  color: #0f172a;
+  color: var(--color-text);
   padding-bottom: 4px;
 }
 
 .subtitle {
   font-size: clamp(15px, 1.5vw, 18px);
   line-height: 1.7;
-  color: #475569;
+  color: var(--color-text-secondary);
   padding-bottom: 12px;
   max-width: 480px;
 }
@@ -93,9 +93,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  background-color: #2563eb;
-  color: #ffffff;
+  transition: background-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   border-radius: 9999px;
   padding: 12px 24px;
   font-size: 15px;
@@ -105,7 +105,7 @@
 }
 
 .button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--color-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgb(37 99 235 / 35%);
 }
@@ -120,15 +120,15 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  transition: color 0.18s ease;
-  color: #2563eb;
+  transition: color var(--transition);
+  color: var(--color-primary);
   font-size: 15px;
   font-weight: 600;
   padding: 12px 6px;
 }
 
 .simpleButton:hover {
-  color: #1d4ed8;
+  color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
@@ -170,7 +170,7 @@
 
 .statLabel {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 /* ─── How it works ───────────────────────────────────────────── */
