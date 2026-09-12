@@ -335,10 +335,10 @@ const Repo = () => {
               </div>
             )}
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Detalhes da requisição</span>
-              </div>
+            <details className={styles.section}>
+              <summary className={styles.detailsToggle}>
+                <span className={styles['section-title']}>Detalhes técnicos da requisição</span>
+              </summary>
               <div className={styles['request-details']}>
                 <span className={styles['request-method']}>GET</span>
                 <span className={styles['request-url']}>{requestPayloads[0].url}</span>
@@ -347,7 +347,7 @@ const Repo = () => {
                 <span className={styles['body-title']}>Corpo da resposta</span>
                 <textarea rows={20} value={requestPayloads[0].payload} spellCheck={false} readOnly={true} />
               </div>
-            </div>
+            </details>
           </div>
       }
       <Popup open={open} onClose={closeModalRepo} >

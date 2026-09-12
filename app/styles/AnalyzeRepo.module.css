@@ -192,6 +192,25 @@
   background: var(--color-surface-raised);
 }
 
+.detailsToggle {
+  cursor: pointer;
+  list-style: none;
+}
+
+.detailsToggle::-webkit-details-marker {
+  display: none;
+}
+
+.detailsToggle .section-title::before {
+  content: '▸ ';
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+details[open] .detailsToggle .section-title::before {
+  content: '▾ ';
+}
+
 .nearHint {
   margin-top: 10px;
   font-size: 15px;
