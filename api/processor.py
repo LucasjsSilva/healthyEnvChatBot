@@ -94,7 +94,13 @@ def _collect_metrics(owner, repo_name, headers, gh_token=None):
     if isinstance(stats, list):
         total_commits = sum(c.get('total', 0) for c in stats)
     else:
-        total_commits = basic.get('pushed_at') and 0 or 0  # fallback
+        # /stats/contributors computes asynchronously and returns 202 (no
+        # body, so _get sees a non-200 and returns None) the first time a
+        # repo is queried — the common case for a repo just submitted to
+        # HealthyEnv. Fall back to summing each contributor's `contributions`
+        # count from /contributors, already fetched above and available
+        # immediately, instead of the old fallback which always evaluated to 0.
+        total_commits = sum(c.get('contributions', 0) for c in contributors_list)
 
     # Truck factor: smallest group of devs responsible for ≥50 % of commits
     truck_factor = 0
