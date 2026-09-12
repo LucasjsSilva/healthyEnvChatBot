@@ -326,16 +326,16 @@ const Repo = () => {
             </div>
             {(insightsLoading || insights?.recommendations) && (
               <div className={styles.section}>
-                <div className={styles['section-title']}>
-                  <span>Recomendações</span>
+                <div className={styles.sectionHeader}>
+                  <span className={styles['section-title']}>Recomendações</span>
                 </div>
                 <InsightCard text={insights?.recommendations} loading={insightsLoading} />
               </div>
             )}
 
             <div className={styles.section}>
-              <div className={styles['section-title']}>
-                <span>Detalhes da requisição</span>
+              <div className={styles.sectionHeader}>
+                <span className={styles['section-title']}>Detalhes da requisição</span>
               </div>
               <div className={styles['request-details']}>
                 <span className={styles['request-method']}>GET</span>
