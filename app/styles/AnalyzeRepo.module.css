@@ -124,6 +124,23 @@
   align-items: flex-end;
 }
 
+.overviewGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media screen and (min-width: 1025px) {
+  .overviewGrid {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+
+  .overviewGrid .section {
+    margin-top: 0;
+  }
+}
+
 .section-title {
   font-size: 20px;
   font-weight: 700;

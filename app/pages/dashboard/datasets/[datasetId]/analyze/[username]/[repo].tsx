@@ -293,19 +293,21 @@ const Repo = () => {
               </div>
             </div>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Resumo da análise</span>
+            <div className={styles.overviewGrid}>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles['section-title']}>Resumo da análise</span>
+                </div>
+                <AnalysisSummarySection metricsCount={analysisSummary} />
               </div>
-              <AnalysisSummarySection metricsCount={analysisSummary} />
-            </div>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Distribuição</span>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles['section-title']}>Distribuição</span>
+                </div>
+                <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
+                <InsightCard text={insights?.cluster} loading={insightsLoading} />
               </div>
-              <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
-              <InsightCard text={insights?.cluster} loading={insightsLoading} />
             </div>
 
             <div className={styles.section}>

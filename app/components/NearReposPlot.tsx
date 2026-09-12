@@ -27,7 +27,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: 'distantes',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#E66E6E' },
+          // "Distante" é só menos parecido, não "ruim" — cinza neutro (--color-text-muted)
+          marker: { color: '#94a3b8' },
         },
         {
           x: props.referenceReposInfo.map((repo) => { if (repo['near']) return repo['x'] }),
@@ -36,7 +37,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: 'próximos',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#84ED66' },
+          // --color-primary
+          marker: { color: '#2563eb' },
         },
         {
           x: [props.selectedRepoInfo['x']],
@@ -45,7 +47,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: props.selectedRepoInfo['name'],
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#448A30' },
+          // --color-accent, pra destacar o repositório selecionado
+          marker: { color: '#6366f1', size: 10 },
         },
       ]}
       layout={{

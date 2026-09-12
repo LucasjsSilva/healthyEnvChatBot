@@ -24,8 +24,11 @@ const AnalysisSummarySection = (props: AnalysisSummarySectionProps) => {
           values: [props.metricsCount['okMetricsCount'], props.metricsCount['reasonableMetricsCount'], props.metricsCount['badMetricsCount']],
           labels: ['Métricas boas', 'Métricas razoáveis', 'Métricas ruins'],
           marker: {
-            colors: ['#c4ffcc', '#fceec2', '#fad6d6'],
+            // Mesmos tons sólidos de --color-ok / --color-warn / --color-bad
+            colors: ['#16a34a', '#d97706', '#dc2626'],
           },
+          // Texto branco para manter contraste sobre os tons sólidos
+          textfont: { color: '#ffffff' },
           type: 'pie',
         }]}
         layout={{
