@@ -67,11 +67,17 @@ const SubmitRepositoryPage = () => {
   async function loadGithubRepos() {
     setIsLoadingRepos(true)
     try {
-      const resp = await axios.get(`${Constants.baseUrl}/me/repos`, { withCredentials: true })
+      const resp = await axios.get(`https://api.github.com/user/repos`, {
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `token ${userData['token']}`,
+        },
+        params: { per_page: 100, sort: 'updated' },
+      })
       if (resp.status === 200) setRepos(resp.data || [])
     } catch (error) {
       console.error('Error loading GitHub repos:', error)
-      setSubmitNotice({ type: 'error', text: 'Failed to load your GitHub repositories. Please try again.' })
+      setSubmitNotice({ type: 'error', text: 'Não foi possível carregar seus repositórios do GitHub. Tente novamente.' })
     } finally {
       setIsLoadingRepos(false)
     }
@@ -108,8 +114,7 @@ const SubmitRepositoryPage = () => {
       setIsCreatingDataset(true)
       const resp = await axios.post(
         `${Constants.baseUrl}/datasets`,
-        { name: newDsName.trim(), description: newDsDesc.trim() },
-        { withCredentials: true }
+        { name: newDsName.trim(), description: newDsDesc.trim(), author: userData['login'] }
       )
       if (resp.status === 201) {
         setShowCreateModal(false)
@@ -127,7 +132,7 @@ const SubmitRepositoryPage = () => {
 
   async function submitRepository(repo: any) {
     if (!selectedDataset) {
-      setSubmitNotice({ type: 'error', text: 'Please select a target dataset.' })
+      setSubmitNotice({ type: 'error', text: 'Selecione um dataset de destino.' })
       return
     }
     try {
@@ -135,17 +140,22 @@ const SubmitRepositoryPage = () => {
       setSubmitNotice(null)
       setSubmittingRepoKey(key)
       const repoUrl = repo.svn_url || repo.html_url
+      const email = userData['email'] || userData['login']
       const response = await axios.post(
-        `${Constants.baseUrl}/datasets/${selectedDataset}/request_and_process`,
-        { repo_url: repoUrl },
-        { withCredentials: true }
+        `${Constants.baseUrl}/datasets/${selectedDataset}/request`,
+        {
+          name: userData['login'],
+          email,
+          repo_url: repoUrl,
+          gh_token: userData['token'],
+        }
       )
       if (response.status >= 200 && response.status < 300) {
-        setSubmitNotice({ type: 'success', text: 'Repository submitted successfully! Processing has started.' })
+        setSubmitNotice({ type: 'success', text: 'Repositório enviado com sucesso! O processamento foi iniciado.' })
         await loadGithubRepos()
       }
     } catch {
-      setSubmitNotice({ type: 'error', text: 'Failed to submit repository. Please check your authentication and try again.' })
+      setSubmitNotice({ type: 'error', text: 'Falha ao enviar o repositório. Verifique sua autenticação e tente novamente.' })
     } finally {
       setSubmittingRepoKey('')
     }
