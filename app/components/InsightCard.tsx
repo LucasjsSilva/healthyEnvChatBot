@@ -1,4 +1,6 @@
 import styles from '../styles/InsightCard.module.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 
 interface InsightCardProps {
   text?: string
@@ -11,7 +13,8 @@ const InsightCard = ({ text, loading }: InsightCardProps) => {
   return (
     <div className={styles.card}>
       <div className={styles.label}>
-        ✨ Interpretação gerada por IA
+        <FontAwesomeIcon icon={faWandMagicSparkles} />
+        Interpretação gerada por IA
       </div>
       {loading ? (
         <div className={styles.skeleton}>

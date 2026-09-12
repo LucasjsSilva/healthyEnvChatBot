@@ -10,6 +10,7 @@ import { faArrowRightArrowLeft, faArrowsRotate, faCheck } from "@fortawesome/fre
 import { getFirstQuartile, getMedian, getThirdQuartile } from "../../../../../../functions/stats"
 import PlotGrid from "../../../../../../components/PlotGrid"
 import Header from "../../../../../../components/Header"
+import Reveal from "../../../../../../components/Reveal"
 import RepoInfos from "../../../../../../components/RepoInfos"
 import NearReposPlot from "../../../../../../components/NearReposPlot"
 import MetricsHint from "../../../../../../components/MetricsHint"
@@ -245,107 +246,120 @@ const Repo = () => {
             <span className={styles.loadingText}>Obtendo resultados da análise...</span>
           </div>
           : <div className={styles.container}>
-            <div className={styles['clustering-summary']}>
-              <div className={styles['selected-repo-info']}>
-                <div className={styles.repoInfoTitle}>
-                  <span className={styles['repo-name']}>
-                    {selectedRepoInfo['name']}
+            <Reveal>
+              <div className={styles['clustering-summary']}>
+                <div className={styles['selected-repo-info']}>
+                  <div className={styles.repoInfoTitle}>
+                    <span className={styles['repo-name']}>
+                      {selectedRepoInfo['name']}
+                    </span>
+                    <div className={styles['repo-type-badge']}>
+                      Adicionado pelo HealthyEnv
+                      <FontAwesomeIcon icon={faCheck} style={{ marginLeft: 5, height: 'match-content' }} />
+                    </div>
+                  </div>
+                  <RepoInfos
+                    language={selectedRepoInfo['language']}
+                    loc={selectedRepoInfo['loc']}
+                    stars={selectedRepoInfo['stars']}
+                    forks={selectedRepoInfo['forks']}
+                    openIssues={selectedRepoInfo['open_issues']}
+                    contributors={selectedRepoInfo['contributors']}
+                    commits={selectedRepoInfo['commits']} />
+                  <span className={styles['algorithm-hint']}>
+                    Algoritmo utilizado:
                   </span>
-                  <div className={styles['repo-type-badge']}>
-                    Adicionado pelo HealthyEnv
-                    <FontAwesomeIcon icon={faCheck} style={{ marginLeft: 5, height: 'match-content' }} />
-                  </div>
-                </div>
-                <RepoInfos
-                  language={selectedRepoInfo['language']}
-                  loc={selectedRepoInfo['loc']}
-                  stars={selectedRepoInfo['stars']}
-                  forks={selectedRepoInfo['forks']}
-                  openIssues={selectedRepoInfo['open_issues']}
-                  contributors={selectedRepoInfo['contributors']}
-                  commits={selectedRepoInfo['commits']} />
-                <span className={styles['algorithm-hint']}>
-                  Algoritmo utilizado:
-                </span>
-                <span className={styles['algorithm-title']}>
-                  Similaridade por distância
-                </span>
-                <span>
-                  Este algoritmo busca no dataset os repositórios mais semelhantes
-                  ao repositório selecionado, com base na distância entre eles no
-                  plano de métricas.
-                </span>
-                <span className={styles.nearHint}>Obtendo <b>{+router.query.near}</b> projetos semelhantes.</span>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                  <div className={styles['change-algorithm-button']} onClick={() => setOpen(true)}>
-                    <FontAwesomeIcon icon={faArrowRightArrowLeft} />
-                    <span className={styles['button-label']}>
-                      Trocar repositório
-                    </span>
-                  </div>
-                  <div className={styles['change-algorithm-button']} onClick={() => setOpenN(true)}>
-                    <FontAwesomeIcon icon={faArrowsRotate} />
-                    <span className={styles['button-label']}>
-                      Alterar quantidade de similares
-                    </span>
+                  <span className={styles['algorithm-title']}>
+                    Similaridade por distância
+                  </span>
+                  <span>
+                    Este algoritmo busca no dataset os repositórios mais semelhantes
+                    ao repositório selecionado, com base na distância entre eles no
+                    plano de métricas.
+                  </span>
+                  <span className={styles.nearHint}>Obtendo <b>{+router.query.near}</b> projetos semelhantes.</span>
+                  <div style={{ display: 'flex', flexDirection: 'row' }}>
+                    <div className={styles['change-algorithm-button']} onClick={() => setOpen(true)}>
+                      <FontAwesomeIcon icon={faArrowRightArrowLeft} />
+                      <span className={styles['button-label']}>
+                        Trocar repositório
+                      </span>
+                    </div>
+                    <div className={styles['change-algorithm-button']} onClick={() => setOpenN(true)}>
+                      <FontAwesomeIcon icon={faArrowsRotate} />
+                      <span className={styles['button-label']}>
+                        Alterar quantidade de similares
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Reveal>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Resumo da análise</span>
-              </div>
-              <AnalysisSummarySection metricsCount={analysisSummary} />
-            </div>
+            <Reveal delay={80}>
+              <div className={styles.overviewGrid}>
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <span className={styles['section-title']}>Resumo da análise</span>
+                  </div>
+                  <AnalysisSummarySection metricsCount={analysisSummary} />
+                </div>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Distribuição</span>
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <span className={styles['section-title']}>Distribuição</span>
+                  </div>
+                  <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
+                  <InsightCard text={insights?.cluster} loading={insightsLoading} />
+                </div>
               </div>
-              <NearReposPlot selectedRepoInfo={selectedRepoInfo} referenceReposInfo={referenceReposInfo} />
-              <InsightCard text={insights?.cluster} loading={insightsLoading} />
-            </div>
+            </Reveal>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles['section-title']}>Métricas aplicadas</span>
-                <MetricsHint />
-              </div>
-              {
-                metricsData.map((metricCategory: any) => {
-                  return <PlotGrid
-                    key={metricCategory['id']}
-                    data={metricCategory}
-                    insight={insights?.categories?.[metricCategory['id']]}
-                    insightLoading={insightsLoading}
-                  />
-                })
-              }
-            </div>
-            {(insightsLoading || insights?.recommendations) && (
+            <Reveal delay={160}>
               <div className={styles.section}>
-                <div className={styles['section-title']}>
-                  <span>Recomendações</span>
+                <div className={styles.sectionHeader}>
+                  <span className={styles['section-title']}>Métricas aplicadas</span>
+                  <MetricsHint />
                 </div>
-                <InsightCard text={insights?.recommendations} loading={insightsLoading} />
+                {
+                  metricsData.map((metricCategory: any) => {
+                    return <PlotGrid
+                      key={metricCategory['id']}
+                      data={metricCategory}
+                      insight={insights?.categories?.[metricCategory['id']]}
+                      insightLoading={insightsLoading}
+                    />
+                  })
+                }
               </div>
+            </Reveal>
+
+            {(insightsLoading || insights?.recommendations) && (
+              <Reveal delay={200}>
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <span className={styles['section-title']}>Recomendações</span>
+                  </div>
+                  <InsightCard text={insights?.recommendations} loading={insightsLoading} />
+                </div>
+              </Reveal>
             )}
 
-            <div className={styles.section}>
-              <div className={styles['section-title']}>
-                <span>Detalhes da requisição</span>
-              </div>
-              <div className={styles['request-details']}>
-                <span className={styles['request-method']}>GET</span>
-                <span className={styles['request-url']}>{requestPayloads[0].url}</span>
-              </div>
-              <div className={styles['response-body-container']}>
-                <span className={styles['body-title']}>Corpo da resposta</span>
-                <textarea rows={20} value={requestPayloads[0].payload} spellCheck={false} readOnly={true} />
-              </div>
-            </div>
+            <Reveal delay={240}>
+              <details className={styles.section}>
+                <summary className={styles.detailsToggle}>
+                  <span className={styles['section-title']}>Detalhes técnicos da requisição</span>
+                </summary>
+                <div className={styles['request-details']}>
+                  <span className={styles['request-method']}>GET</span>
+                  <span className={styles['request-url']}>{requestPayloads[0].url}</span>
+                </div>
+                <div className={styles['response-body-container']}>
+                  <span className={styles['body-title']}>Corpo da resposta</span>
+                  <textarea rows={20} value={requestPayloads[0].payload} spellCheck={false} readOnly={true} />
+                </div>
+              </details>
+            </Reveal>
           </div>
       }
       <Popup open={open} onClose={closeModalRepo} >

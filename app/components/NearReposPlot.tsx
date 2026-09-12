@@ -1,10 +1,11 @@
 import dynamic from 'next/dynamic';
 import PlotLoadingIndicator from './PlotLoadingIndicator';
-import useWindowDimensions from "../utils/useWindowDimensions"
 
 const Plot = dynamic(() => import('react-plotly.js'), {
   ssr: false,
-  loading: () => <PlotLoadingIndicator width={600} height={300} />,
+  // 300px em vez de 600 — este gráfico agora divide espaço com "Resumo da
+  // análise" numa coluna, então a largura de espera precisa caber nela.
+  loading: () => <PlotLoadingIndicator width={300} height={300} />,
 })
 
 interface NearReposPlotProps {
@@ -13,12 +14,10 @@ interface NearReposPlotProps {
 }
 
 const NearReposPlot = (props: NearReposPlotProps) => {
-  const { width } = useWindowDimensions()
-
-  let safeWidth = width - 17 > 1280 ? 1280 - 72 : width - 17 - 72;
-
   return (
     <Plot
+      useResizeHandler
+      style={{ width: '100%', height: '300px' }}
       data={[
         {
           x: props.referenceReposInfo.map((repo) => { if (!repo['near']) return repo['x'] }),
@@ -27,7 +26,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: 'distantes',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#E66E6E' },
+          // "Distante" é só menos parecido, não "ruim" — cinza neutro (--color-text-muted)
+          marker: { color: '#94a3b8' },
         },
         {
           x: props.referenceReposInfo.map((repo) => { if (repo['near']) return repo['x'] }),
@@ -36,7 +36,8 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: 'próximos',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#84ED66' },
+          // --color-primary
+          marker: { color: '#2563eb' },
         },
         {
           x: [props.selectedRepoInfo['x']],
@@ -45,11 +46,12 @@ const NearReposPlot = (props: NearReposPlotProps) => {
           name: props.selectedRepoInfo['name'],
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#448A30' },
+          // --color-accent, pra destacar o repositório selecionado
+          marker: { color: '#6366f1', size: 10 },
         },
       ]}
       layout={{
-        width: safeWidth,
+        autosize: true,
         height: 300,
         title: 'Repositórios próximos ao selecionado',
         xaxis: {

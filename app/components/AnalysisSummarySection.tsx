@@ -1,11 +1,12 @@
 import dynamic from "next/dynamic"
 import PlotLoadingIndicator from './PlotLoadingIndicator'
 import styles from '../styles/AnalysisSummarySection.module.css'
-import useWindowDimensions from "../utils/useWindowDimensions"
 
 const Plot = dynamic(() => import('react-plotly.js'), {
   ssr: false,
-  loading: () => <PlotLoadingIndicator width={600} height={300} />,
+  // 300px em vez de 600 — este gráfico agora divide espaço com
+  // "Distribuição" numa coluna, então a largura de espera precisa caber nela.
+  loading: () => <PlotLoadingIndicator width={300} height={300} />,
 })
 
 interface AnalysisSummarySectionProps {
@@ -13,23 +14,24 @@ interface AnalysisSummarySectionProps {
 }
 
 const AnalysisSummarySection = (props: AnalysisSummarySectionProps) => {
-  const { width } = useWindowDimensions()
-
-  let safeWidth = width - 17 > 1280 ? 1280 - 72 : width - 17 - 72;
-
   return (
     <div className={styles.analysisSummary}>
       <Plot
+        useResizeHandler
+        style={{ width: '100%', height: '300px' }}
         data={[{
           values: [props.metricsCount['okMetricsCount'], props.metricsCount['reasonableMetricsCount'], props.metricsCount['badMetricsCount']],
           labels: ['Métricas boas', 'Métricas razoáveis', 'Métricas ruins'],
           marker: {
-            colors: ['#c4ffcc', '#fceec2', '#fad6d6'],
+            // Mesmos tons sólidos de --color-ok / --color-warn / --color-bad
+            colors: ['#16a34a', '#d97706', '#dc2626'],
           },
+          // Texto branco para manter contraste sobre os tons sólidos
+          textfont: { color: '#ffffff' },
           type: 'pie',
         }]}
         layout={{
-          width: safeWidth,
+          autosize: true,
           height: 300,
         }}
       />

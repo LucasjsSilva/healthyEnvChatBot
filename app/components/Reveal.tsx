@@ -22,7 +22,13 @@ const Reveal = ({ children, delay = 0, className = '' }: RevealProps) => {
           observer.disconnect()
         }
       },
-      { threshold: 0.15 }
+      // threshold: 0 dispara assim que o primeiro pixel entra na tela — com
+      // 0.15 (15% da altura do próprio bloco), blocos muito altos (ex.: a
+      // seção de métricas na tela de análise, com vários gráficos
+      // empilhados) podem nunca satisfazer a razão antes de já terem sido
+      // rolados quase todos para fora da viewport, deixando um vão em
+      // branco enorme até o "pop" tardio no meio da rolagem.
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' }
     )
 
     observer.observe(node)
