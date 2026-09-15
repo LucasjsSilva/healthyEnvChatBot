@@ -41,6 +41,7 @@ with app.app_context():
   from model.metric_repo import MetricRepoModel
   from model.analysis_request import AnalysisRequestModel
   from model.metric_category import MetricCategory
+  from model.rag_interaction_log import RagInteractionLog
   db.create_all()
 
 
