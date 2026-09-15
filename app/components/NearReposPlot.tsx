@@ -66,6 +66,17 @@ const NearReposPlot = (props: NearReposPlotProps) => {
         },
         plot_bgcolor: '#ffffff',
         paper_bgcolor: '#ffffff',
+        // Legenda horizontal embaixo do gráfico, não vertical à direita —
+        // o nome do repositório selecionado (uma das séries) pode ser
+        // longo, e a legenda vertical padrão do Plotly não encolhe o
+        // texto, só ultrapassa a borda do card num layout de 2 colunas.
+        legend: {
+          orientation: 'h',
+          x: 0.5,
+          xanchor: 'center',
+          y: -0.2,
+        },
+        margin: { t: 40, b: 60, l: 30, r: 30 },
       }}
     />
   );
