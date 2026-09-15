@@ -16,7 +16,9 @@ _llm = None
 def _get_llm():
     global _llm
     if _llm is None:
-        _llm = _build_llm()
+        # _build_llm() returns (llm, provider, model_name) — only the LLM
+        # itself is needed here.
+        _llm, _provider, _model_name = _build_llm()
     return _llm
 
 
