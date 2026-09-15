@@ -9,7 +9,7 @@ LLM: Groq (free) or OpenAI — controlled by LLM_PROVIDER env var.
 import json
 import os
 import shutil
-from typing import List
+from typing import List, Tuple
 
 from langchain_community.document_loaders import TextLoader
 from langchain_core.documents import Document
@@ -19,8 +19,19 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+
+
+# Relevance threshold for retrieved chunks, as FAISS L2 distance (lower =
+# more similar; there is no fixed 0-1 range for this metric, it depends on
+# the embedding space). Empirically measured against the real index
+# (2026-09-14, paraphrase-multilingual-MiniLM-L12-v2): top-1 distance for
+# on-topic questions ("o que significa o truck factor?", "como interpretar
+# issues antigas?") landed at 9-14; top-1 distance for off-topic questions
+# ("receita de bolo", "copa do mundo de 2018") landed at 23-29. 18.0 sits in
+# the gap between those two clusters. Configurable since this is a starting
+# point to be tuned with real usage data (see RagInteractionLog).
+RELEVANCE_MAX_DISTANCE = float(os.environ.get("RAG_RELEVANCE_MAX_DISTANCE", "18.0"))
 
 
 # Path to the knowledge base markdown file
@@ -84,11 +95,13 @@ def _build_vectorstore() -> FAISS:
     return vectorstore
 
 
-def _build_llm() -> BaseChatModel:
+def _build_llm() -> Tuple[BaseChatModel, str, str]:
     """
-    Returns the LLM based on LLM_PROVIDER env var.
+    Returns (llm, provider, model_name) based on LLM_PROVIDER env var.
     - 'groq'   -> ChatGroq (free tier) — needs GROQ_API_KEY, model via GROQ_MODEL
     - 'openai' -> ChatOpenAI           — needs OPENAI_API_KEY
+    provider/model_name are returned alongside (rather than read back off the
+    LLM object later) so callers can log exactly what was configured.
     """
     provider = os.environ.get("LLM_PROVIDER", "groq").lower()
     if provider == "groq":
@@ -98,32 +111,48 @@ def _build_llm() -> BaseChatModel:
             raise ValueError("GROQ_API_KEY not configured")
         # llama models are no longer available on Groq for all accounts; default to a widely available model
         groq_model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
-        return ChatGroq(model=groq_model, temperature=0.2, api_key=groq_key)
+        return ChatGroq(model=groq_model, temperature=0.2, api_key=groq_key), "groq", groq_model
     # OpenAI fallback
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if not openai_key:
         raise ValueError("OPENAI_API_KEY not configured")
     from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, api_key=openai_key)
+    openai_model = "gpt-3.5-turbo"
+    return ChatOpenAI(model=openai_model, temperature=0.2, api_key=openai_key), "openai", openai_model
 
 
-def build_rag_chain():
-    """Builds a stateless RAG chain using LCEL primitives."""
+class RagPipeline:
+    """
+    Bundles the vectorstore and the answer-generation chain so callers
+    (session_manager) can retrieve context explicitly — with relevance
+    scores, for logging and threshold filtering — before invoking the LLM,
+    instead of retrieval being hidden inside an opaque LCEL chain.
+    """
+
+    def __init__(self, vectorstore: FAISS, llm: BaseChatModel, provider: str, model_name: str):
+        self.vectorstore = vectorstore
+        self.provider = provider
+        self.model_name = model_name
+        self._answer_chain = QA_PROMPT | llm | StrOutputParser()
+
+    def retrieve_with_scores(self, query: str, k: int = 4) -> List[Tuple[Document, float]]:
+        """Returns [(Document, l2_distance), ...] — lower distance = more similar."""
+        return self.vectorstore.similarity_search_with_score(query, k=k)
+
+    def answer(self, question: str, chat_history: List[BaseMessage], context: str) -> str:
+        result = self._answer_chain.invoke({
+            "input": question,
+            "chat_history": chat_history,
+            "context": context,
+        })
+        return result if isinstance(result, str) else str(result)
+
+
+def build_rag_pipeline() -> RagPipeline:
+    """Builds the RAG pipeline (vectorstore + LLM) used by session_manager."""
     vectorstore = _build_vectorstore()
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
-    llm = _build_llm()
-
-    def _retrieve_and_format(inputs: dict) -> str:
-        docs = retriever.invoke(inputs["input"])
-        return "\n\n".join(doc.page_content for doc in docs)
-
-    chain = (
-        RunnablePassthrough.assign(context=_retrieve_and_format)
-        | QA_PROMPT
-        | llm
-        | StrOutputParser()
-    )
-    return chain
+    llm, provider, model_name = _build_llm()
+    return RagPipeline(vectorstore, llm, provider, model_name)
 
 
 def rebuild_index() -> None:
@@ -175,10 +204,10 @@ def add_repo_document(repo_id: str, text: str) -> None:
     indexed.add(repo_id)
     _save_indexed_repo_ids(indexed)
 
-    # Invalidate the cached chain so the next request uses the updated index
+    # Invalidate the cached pipeline so the next request uses the updated index
     from chatbot import session_manager as _sm
     with _sm._lock:
-        _sm._chain = None
+        _sm._pipeline = None
 
 
 def index_repos_from_db(repos_data: List[dict]) -> None:
@@ -211,10 +240,10 @@ def index_repos_from_db(repos_data: List[dict]) -> None:
     indexed.update(new_ids)
     _save_indexed_repo_ids(indexed)
 
-    # Invalidate cached chain
+    # Invalidate cached pipeline
     from chatbot import session_manager as _sm
     with _sm._lock:
-        _sm._chain = None
+        _sm._pipeline = None
 
     print(f"[rag_chain] Indexed {len(new_ids)} new repo(s) into FAISS.")
 
