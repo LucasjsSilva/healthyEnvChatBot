@@ -33,20 +33,27 @@ def ask(session_id: str, question: str) -> str:
     Sends a question to the RAG chain and returns the answer.
     Maintains per-session conversation history.
     """
+    # Only the shared-state read is locked — snapshot the chain reference and
+    # a copy of this session's history, then release the lock before the
+    # network call to the LLM. Holding _lock across chain.invoke() would
+    # serialize every chat request app-wide (across all sessions/users) for
+    # the whole duration of each LLM call.
     with _lock:
         chain = _get_chain()
+        history = list(_histories.setdefault(session_id, []))
+
+    lc_history = messages_to_history(history)
+
+    result = chain.invoke({
+        "input": question,
+        "chat_history": lc_history,
+    })
+    # chain returns a str directly (StrOutputParser at the end)
+    answer: str = result if isinstance(result, str) else result.get("answer", "")
+
+    # Persist the turn to history (keep last 10 turns = 20 messages)
+    with _lock:
         history = _histories.setdefault(session_id, [])
-
-        lc_history = messages_to_history(history)
-
-        result = chain.invoke({
-            "input": question,
-            "chat_history": lc_history,
-        })
-        # chain returns a str directly (StrOutputParser at the end)
-        answer: str = result if isinstance(result, str) else result.get("answer", "")
-
-        # Persist the turn to history (keep last 10 turns = 20 messages)
         history.append({"role": "user",      "content": question})
         history.append({"role": "assistant", "content": answer})
         if len(history) > 20:
