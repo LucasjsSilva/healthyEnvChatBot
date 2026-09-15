@@ -3,53 +3,100 @@ Session manager for the RAG chatbot.
 
 Keeps one message history list per session_id so that different
 users/browser sessions have isolated conversation histories.
-The RAG chain itself is stateless (built once and shared).
+The RAG pipeline itself is stateless (built once and shared).
 """
 
 import threading
+import time
 from typing import Dict, List, Optional
-from chatbot.rag_chain import build_rag_chain, messages_to_history
-from langchain_core.runnables import Runnable
+from nanoid import generate
+
+from chatbot.rag_chain import RagPipeline, build_rag_pipeline, messages_to_history, RELEVANCE_MAX_DISTANCE
 
 
 _lock = threading.Lock()
 
-# Shared stateless chain (built lazily on first use)
-_chain: Optional[Runnable] = None
+# Shared stateless pipeline (built lazily on first use)
+_pipeline: Optional[RagPipeline] = None
 
 # Per-session message history: list of {"role": "user"|"assistant", "content": str}
 _histories: Dict[str, List[dict]] = {}
 
 
-def _get_chain() -> Runnable:
-    global _chain
-    if _chain is None:
-        _chain = build_rag_chain()
-    return _chain
+def _get_pipeline() -> RagPipeline:
+    global _pipeline
+    if _pipeline is None:
+        _pipeline = build_rag_pipeline()
+    return _pipeline
+
+
+def _log_interaction(session_id, question, answer, scored_docs, relevant_docs, latency_ms, pipeline):
+    """
+    Persists raw instrumentation data for this exchange — never lets a
+    logging failure break the chat response (the whole point is to collect
+    data for later analysis, not to gate the feature on it).
+    """
+    try:
+        from model.rag_interaction_log import RagInteractionLog
+
+        relevant_ids = {id(doc) for doc, _ in relevant_docs}
+        chunks = [
+            {
+                "content": doc.page_content,
+                "score": float(score),
+                "repo_id": doc.metadata.get("repo_id"),
+                "relevant": id(doc) in relevant_ids,
+            }
+            for doc, score in scored_docs
+        ]
+
+        log = RagInteractionLog(
+            id=generate(size=10),
+            session_id=session_id,
+            question=question,
+            answer=answer,
+            retrieved_chunks=chunks,
+            num_chunks_retrieved=len(scored_docs),
+            num_chunks_relevant=len(relevant_docs),
+            below_threshold=len(relevant_docs) == 0,
+            relevance_threshold=RELEVANCE_MAX_DISTANCE,
+            llm_provider=pipeline.provider,
+            llm_model=pipeline.model_name,
+            latency_ms=latency_ms,
+        )
+        log.save()
+    except Exception as e:
+        print(f'[session_manager] Warning: could not log RAG interaction: {e}')
 
 
 def ask(session_id: str, question: str) -> str:
     """
-    Sends a question to the RAG chain and returns the answer.
+    Sends a question to the RAG pipeline and returns the answer.
     Maintains per-session conversation history.
     """
-    # Only the shared-state read is locked — snapshot the chain reference and
-    # a copy of this session's history, then release the lock before the
-    # network call to the LLM. Holding _lock across chain.invoke() would
+    # Only the shared-state read is locked — snapshot the pipeline reference
+    # and a copy of this session's history, then release the lock before the
+    # network calls (retrieval + LLM). Holding _lock across those would
     # serialize every chat request app-wide (across all sessions/users) for
-    # the whole duration of each LLM call.
+    # the whole duration of each call.
     with _lock:
-        chain = _get_chain()
+        pipeline = _get_pipeline()
         history = list(_histories.setdefault(session_id, []))
 
     lc_history = messages_to_history(history)
 
-    result = chain.invoke({
-        "input": question,
-        "chat_history": lc_history,
-    })
-    # chain returns a str directly (StrOutputParser at the end)
-    answer: str = result if isinstance(result, str) else result.get("answer", "")
+    t0 = time.monotonic()
+
+    # Retrieve with scores so we can filter by relevance and log what was
+    # actually retrieved — the LLM call below only sees chunks that pass
+    # the threshold, instead of always getting exactly k chunks regardless
+    # of whether any of them are actually relevant to the question.
+    scored_docs = pipeline.retrieve_with_scores(question, k=4)
+    relevant_docs = [(doc, score) for doc, score in scored_docs if score <= RELEVANCE_MAX_DISTANCE]
+    context = "\n\n".join(doc.page_content for doc, _ in relevant_docs)
+
+    answer = pipeline.answer(question, lc_history, context)
+    latency_ms = (time.monotonic() - t0) * 1000
 
     # Persist the turn to history (keep last 10 turns = 20 messages)
     with _lock:
@@ -58,6 +105,8 @@ def ask(session_id: str, question: str) -> str:
         history.append({"role": "assistant", "content": answer})
         if len(history) > 20:
             _histories[session_id] = history[-20:]
+
+    _log_interaction(session_id, question, answer, scored_docs, relevant_docs, latency_ms, pipeline)
 
     return answer
 
