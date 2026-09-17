@@ -4,9 +4,16 @@ import Constants from '../utils/constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faComments, faXmark, faTrash, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 
+interface Source {
+  label: string
+  excerpt: string
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  sources?: Source[]
+  belowThreshold?: boolean
 }
 
 interface ChatBotProps {
@@ -71,6 +78,8 @@ export default function ChatBot({ repoContext }: ChatBotProps) {
       const assistantMsg: Message = {
         role: 'assistant',
         content: data.answer ?? 'Não consegui gerar uma resposta.',
+        sources: Array.isArray(data.sources) ? data.sources : [],
+        belowThreshold: !!data.below_threshold,
       }
       setMessages((prev) => [...prev, assistantMsg])
     } catch {
@@ -146,6 +155,28 @@ export default function ChatBot({ repoContext }: ChatBotProps) {
                     {j < msg.content.split('\n').length - 1 && <br />}
                   </span>
                 ))}
+                {msg.role === 'assistant' && msg.belowThreshold && (
+                  <div className={styles.sourcesNotice}>
+                    ⚠️ Não encontrei nada suficientemente relevante na base de
+                    conhecimento para esta pergunta — a resposta acima não é
+                    fundamentada em nenhuma fonte específica.
+                  </div>
+                )}
+                {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                  <details className={styles.sourcesDetails}>
+                    <summary className={styles.sourcesSummary}>
+                      Fontes consultadas ({msg.sources.length})
+                    </summary>
+                    <ul className={styles.sourcesList}>
+                      {msg.sources.map((source, k) => (
+                        <li key={k} className={styles.sourceItem}>
+                          <span className={styles.sourceLabel}>{source.label}</span>
+                          <span className={styles.sourceExcerpt}>{source.excerpt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </div>
             ))}
             {loading && (
