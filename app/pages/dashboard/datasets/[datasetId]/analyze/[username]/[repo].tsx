@@ -4,7 +4,7 @@ import Head from "next/head"
 import Constants from "../../../../../../utils/constants"
 import styles from '../../../../../../styles/AnalyzeRepo.module.css'
 import Router, { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRightArrowLeft, faArrowsRotate, faCheck } from "@fortawesome/free-solid-svg-icons"
 import { getFirstQuartile, getMedian, getThirdQuartile } from "../../../../../../functions/stats"
@@ -38,6 +38,10 @@ const Repo = () => {
   const [nValue, setNValue] = useState(1)
   const [insights, setInsights] = useState<any>(null)
   const [insightsLoading, setInsightsLoading] = useState(false)
+  const [insightsError, setInsightsError] = useState<string | null>(null)
+  // Stores the last args loadInsights was called with, so "Tentar novamente"
+  // can retry without needing to re-fetch/reprocess the whole analysis.
+  const insightsArgsRef = useRef<{ repoInfo: any; metricsData: any[]; allRepos: any[] } | null>(null)
 
   // Modal
   const [open, setOpen] = useState(false)
@@ -66,7 +70,9 @@ const Repo = () => {
   // Fetches and stores AI-generated insights for the current repo analysis
   async function loadInsights(repoInfo: any, metricsData: any[], allRepos: any[]) {
     if (!repoInfo || !metricsData.length) return
+    insightsArgsRef.current = { repoInfo, metricsData, allRepos }
     setInsights(null)
+    setInsightsError(null)
     setInsightsLoading(true)
 
     const similarRepos = allRepos.filter((r: any) => r.near).map((r: any) => r.name)
@@ -111,11 +117,21 @@ const Repo = () => {
     try {
       const res = await axios.post(`${Constants.baseUrl}/insights`, payload)
       setInsights(res.data)
-    } catch (e) {
-      console.error('Failed to load insights', e)
+    } catch (e: any) {
+      // Flask returns {error, detail} on failure (e.g. Groq rate-limited or
+      // misconfigured) — surface it so a failure is diagnosable without
+      // needing to reproduce it separately from server logs.
+      const serverMessage = e?.response?.data?.error
+      console.error('Failed to load insights:', serverMessage || e?.message || e, e?.response?.data)
+      setInsightsError(serverMessage || 'Não foi possível gerar a interpretação por IA.')
     } finally {
       setInsightsLoading(false)
     }
+  }
+
+  function retryInsights() {
+    const args = insightsArgsRef.current
+    if (args) loadInsights(args.repoInfo, args.metricsData, args.allRepos)
   }
 
   // Load a repo's analysis
@@ -314,6 +330,17 @@ const Repo = () => {
                 </div>
               </div>
             </Reveal>
+
+            {insightsError && (
+              <Reveal delay={120}>
+                <div className={styles.insightsErrorNotice}>
+                  <span>⚠️ {insightsError}</span>
+                  <button type="button" className={styles.insightsRetryButton} onClick={retryInsights}>
+                    Tentar novamente
+                  </button>
+                </div>
+              </Reveal>
+            )}
 
             <Reveal delay={160}>
               <div className={styles.section}>

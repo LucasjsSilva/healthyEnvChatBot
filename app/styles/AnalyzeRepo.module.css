@@ -117,6 +117,39 @@
   box-shadow: var(--shadow-card-hover);
 }
 
+.insightsErrorNotice {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+  font-size: 14px;
+}
+
+.insightsRetryButton {
+  flex-shrink: 0;
+  background: var(--color-surface);
+  color: var(--color-warn);
+  border: 1px solid var(--color-warn);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.insightsRetryButton:hover {
+  background: var(--color-warn);
+  color: var(--color-surface);
+}
+
 .sectionHeader {
   display: flex;
   flex-direction: row;
