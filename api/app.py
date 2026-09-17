@@ -211,7 +211,9 @@ def chat():
 
   Response body (JSON):
     {
-      "answer": "<string>"
+      "answer": "<string>",
+      "sources": [{"label": "<string>", "excerpt": "<string>"}, ...],  # empty if below_threshold
+      "below_threshold": <bool>  # true if no retrieved chunk passed the relevance threshold
     }
   """
   data = request.get_json(force=True)
@@ -248,14 +250,18 @@ def chat():
       )
 
   try:
-    answer = ask(session_id, enriched_message)
+    result = ask(session_id, enriched_message)
   except Exception as e:
     return Response(
       json.dumps({'error': str(e)}),
       status=500, mimetype='application/json')
 
   return Response(
-    json.dumps({'answer': answer}, ensure_ascii=False),
+    json.dumps({
+      'answer': result['answer'],
+      'sources': result['sources'],
+      'below_threshold': result['below_threshold'],
+    }, ensure_ascii=False),
     status=200, mimetype='application/json')
 
 

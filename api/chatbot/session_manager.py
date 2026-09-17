@@ -8,10 +8,21 @@ The RAG pipeline itself is stateless (built once and shared).
 
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 from nanoid import generate
 
 from chatbot.rag_chain import RagPipeline, build_rag_pipeline, messages_to_history, RELEVANCE_MAX_DISTANCE
+
+
+class Source(TypedDict):
+    label: str
+    excerpt: str
+
+
+class AskResult(TypedDict):
+    answer: str
+    sources: List[Source]
+    below_threshold: bool
 
 
 _lock = threading.Lock()
@@ -69,9 +80,31 @@ def _log_interaction(session_id, question, answer, scored_docs, relevant_docs, l
         print(f'[session_manager] Warning: could not log RAG interaction: {e}')
 
 
-def ask(session_id: str, question: str) -> str:
+def _build_sources(relevant_docs) -> List[Source]:
     """
-    Sends a question to the RAG pipeline and returns the answer.
+    Turns the chunks that passed the relevance threshold into user-facing
+    source references — a short excerpt plus a label saying whether it came
+    from the static metrics knowledge base or from a specific indexed repo.
+    This is what makes RAG answers traceable to the frontend, instead of
+    the retrieval step being invisible to the person reading the answer.
+    """
+    sources: List[Source] = []
+    for doc, _score in relevant_docs:
+        repo_id = doc.metadata.get("repo_id")
+        label = f"Repositório indexado ({repo_id})" if repo_id else "Base de conhecimento de métricas"
+        excerpt = doc.page_content.strip().replace("\n", " ")
+        if len(excerpt) > 220:
+            excerpt = excerpt[:220].rstrip() + "…"
+        sources.append({"label": label, "excerpt": excerpt})
+    return sources
+
+
+def ask(session_id: str, question: str) -> AskResult:
+    """
+    Sends a question to the RAG pipeline and returns the answer along with
+    the sources that grounded it (empty if retrieval was below the
+    relevance threshold) — for a chatbot answer to be traceable, the caller
+    needs more than just the generated text.
     Maintains per-session conversation history.
     """
     # Only the shared-state read is locked — snapshot the pipeline reference
@@ -108,7 +141,11 @@ def ask(session_id: str, question: str) -> str:
 
     _log_interaction(session_id, question, answer, scored_docs, relevant_docs, latency_ms, pipeline)
 
-    return answer
+    return {
+        "answer": answer,
+        "sources": _build_sources(relevant_docs),
+        "below_threshold": len(relevant_docs) == 0,
+    }
 
 
 def delete_session(session_id: str) -> None:
